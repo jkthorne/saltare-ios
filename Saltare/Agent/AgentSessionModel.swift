@@ -11,6 +11,7 @@ final class AgentSessionModel {
     private(set) var phase: AgentPhase = .idle
     private(set) var pendingPermission: String?
     private(set) var errorBanner: String?
+    private(set) var workspaceToolCount = 0
     var model: AgentModel = .opus
     var input: String = ""
 
@@ -23,6 +24,13 @@ final class AgentSessionModel {
 
     var hasCredentials: Bool { assembly.hasCredentials }
     var isStreaming: Bool { task != nil }
+
+    /// Connect the workspace MCP tools (best-effort) so the first turn can act on
+    /// the workspace. Call once when the sheet appears, before any auto-submit.
+    func connectWorkspaceTools() async {
+        await assembly.loadWorkspaceTools()
+        workspaceToolCount = assembly.workspaceToolNames.count
+    }
 
     func submit() {
         let query = input.trimmingCharacters(in: .whitespacesAndNewlines)

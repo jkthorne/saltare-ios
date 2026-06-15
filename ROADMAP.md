@@ -301,11 +301,48 @@ The HUD workspace browser over the REST client; app builds + renders.
   store (CHAT shows #general/#engineering/#design) — the data flow is the
   iP3.1-tested `WorkspaceClient`.
 
-#### iP3.4 — MCP tools + realtime + system reach (next)
-The agent's MCP `saltare__*` tools (`ToolRegistry.remoteTools` append-last), an
-Action Cable Swift client (token-authed live messages), APNs push (server-side
-done), CoreSpotlight content indexing, Live Activities, workspace Widgets, Share
-extension.
+#### iP3.4 — Agent MCP `saltare__*` tools ✅ DONE (2026-06-15)
+The on-device agent can now **act on the workspace**: it connects to saltare's
+MCP `/mcp` endpoint and appends the workspace tools to its registry. `SaltareAgent`
+`swift test` green (**42 tests**); app builds + the agent sheet shows the
+connected-tool count.
+- **Package (pure, tested):** `McpClient` — a minimal MCP client over the
+  Streamable-HTTP `/mcp` endpoint via the JSON-RPC-over-POST path with
+  `Accept: application/json` (plain JSON, **no SSE parsing**): `initialize`
+  (+ `notifications/initialized`, captures the `Mcp-Session-Id` header and echoes
+  it), `tools/list`, `tools/call`. Bearer-authed with the workspace token,
+  resolved per request (a sign-in mid-session goes live without a rebuild).
+  `McpToolSource` (pure, the tested seam) maps a `tools/list` result to prefixed
+  `ToolSpec`s — `saltare__<name>`, so workspace tools never collide with the
+  device tools and sort **after** them (the prompt-cache prefix invariant), with
+  the original name forwarded on the wire — and folds a `tools/call`
+  `{content,isError}` envelope into a `ToolOutcome`. RPC failures degrade to
+  `.error`, never tearing down the turn.
+- **App wiring:** `AgentAssembly` holds the registry + an `McpClient` (→
+  `<base>/mcp`); `loadWorkspaceTools()` connects + sets `ToolRegistry.remoteTools`
+  (best-effort; a no-op signed-out). `AgentSessionModel.connectWorkspaceTools()`
+  runs on sheet appear **before** any auto-submit, so the first turn already has
+  the workspace tools; the header shows a `WS·n` count. `tools` is read live per
+  turn so a later connect takes effect without rebuilding the loop.
+- **Scope-honest:** the native `DEVICE` token carries `mcp:tools:read` (+
+  `mcp:resources:read`, `inference:run`) and is agent-bound + active, so the
+  agent gets the **read** workspace tools today (get/search tasks·docs·messages,
+  list channels·agents, query data, recall memories, …). Mutating
+  (`mcp:tools:write`) and destructive tools stay filtered out until the server
+  widens the device grant — the client already handles them simply not appearing.
+- **Verification note:** a live tool call needs a saltare account + reachable
+  `/mcp` (taps + network the CLI can't drive) — the mapping/outcome logic is
+  unit-tested, the wiring builds, and the count surfaces in the sheet.
+
+#### iP3.5 — Realtime (next)
+An **Action Cable** Swift client (token-authed `cable` socket) so a channel
+thread streams live messages instead of one-shot loads, plus native **APNs**
+registration accepting a bearer token (delivery is server-side done).
+
+#### iP3.6 — System reach (workspace-powered)
+**CoreSpotlight** content indexing (workspace tasks/docs become Spotlight hits),
+**Live Activities** (a running agent turn / task), workspace **Widgets** (recent
+channels/tasks), and a **Share extension** (send to a channel / create a task).
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/

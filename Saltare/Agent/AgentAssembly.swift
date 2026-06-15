@@ -9,9 +9,15 @@ import SaltareAgent
 /// `loop.runStream` with `tools` and `awaitPermission`.
 struct AgentAssembly: Sendable {
     let loop: AgentLoop
-    let tools: [ToolSpec]
     let keyStore: KeyStoring
+    private let registry: ToolRegistry
+    private let mcp: McpClient
     private let workspaceToken: @Sendable () -> String?
+
+    /// The live tool catalog (local tools + any connected workspace tools). Read
+    /// per turn so MCP tools loaded after `loadWorkspaceTools()` take effect
+    /// without rebuilding the loop.
+    var tools: [ToolSpec] { registry.tools }
 
     init(
         catalog: [AppEntry],
@@ -45,13 +51,34 @@ struct AgentAssembly: Sendable {
         )
 
         self.loop = AgentLoop(llm: AnthropicLlmClient(config: config), executor: executor)
-        self.tools = registry.tools
+        self.registry = registry
+        self.mcp = McpClient(config: McpConfig(
+            endpoint: workspaceBaseURL.appendingPathComponent("mcp"),
+            bearerToken: { workspaceToken() }
+        ))
         self.keyStore = keyStore
         self.workspaceToken = workspaceToken
     }
 
     /// True when the agent can authenticate — a workspace session or a pasted key.
     var hasCredentials: Bool { workspaceToken()?.isEmpty == false || keyStore.hasKey }
+
+    /// The `saltare__*` tools currently connected from the workspace (empty when
+    /// signed out or before `loadWorkspaceTools()`).
+    var workspaceToolNames: [String] { registry.remoteTools.map(\.name) }
+
+    /// Connect to saltare's MCP endpoint and append the `saltare__*` workspace
+    /// tools to the registry (after every local tool). No-op when signed out, and
+    /// best-effort — a failed connect leaves the agent with just its local tools.
+    func loadWorkspaceTools() async {
+        guard workspaceToken()?.isEmpty == false else {
+            registry.remoteTools = []
+            return
+        }
+        if let tools = try? await mcp.loadTools() {
+            registry.remoteTools = tools
+        }
+    }
 
     /// The loop's GRANT-flow handler — requests the iOS permission for the tool.
     func awaitPermission(_ permission: String) async -> Bool {

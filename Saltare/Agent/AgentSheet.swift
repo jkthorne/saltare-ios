@@ -34,7 +34,8 @@ struct AgentSheet: View {
             .padding(16)
         }
         .saltareTheme(colors: .dark)
-        .onAppear {
+        .task {
+            await model.connectWorkspaceTools()
             if !initialQuery.isEmpty {
                 model.input = initialQuery
                 model.submit()
@@ -48,6 +49,10 @@ struct AgentSheet: View {
             NierMarker(status: model.isStreaming ? .active : .filled, size: .lg)
             HudText("AGENT", color: colors.frost,
                     style: HudTextStyle(family: .mono, size: 15, weight: .semibold, trackingEm: 0.2))
+            if model.workspaceToolCount > 0 {
+                HudText("WS·\(model.workspaceToolCount)", color: colors.arc, style: typo.hudLabelSmall)
+                    .accessibilityLabel("\(model.workspaceToolCount) workspace tools connected")
+            }
             Spacer()
             Button { model.cycleModel() } label: {
                 HudText(model.model.label, color: colors.arc, style: typo.hudLabelSmall)

@@ -20,15 +20,19 @@ haptics, VoiceOver). The app + widget extension build and run on the simulator.
 vault), the iOS toolbox (registry/executor + intent/`device_status`/GRANT-gated
 Contacts & Calendar tools, `open_app`), and the HUD agent sheet (streaming
 transcript, tool chips, permission GRANT, model picker) wired to the AgentStub
-row. `SaltareAgent` is **37 tests** green; the app builds and the sheet renders
+row, plus the agent's **MCP `saltare__*` workspace tools** (iP3.4).
+`SaltareAgent` is **42 tests** green; the app builds and the sheet renders
 on the simulator.
 
 **iP3 (deep `saltare` integration) is underway:** iP3.1 (pure REST client, 12
 tests), iP3.2 (native **sign-in** + Keychain **token vault** + the agent on the
-**inference proxy** — no on-device Anthropic key), and iP3.3 (the **workspace
+**inference proxy** — no on-device Anthropic key), iP3.3 (the **workspace
 browser** — HUD Chat/Tasks/Agents/Docs over the REST client, with a channel
-thread + composer) are done; the app builds and the browser renders. Next:
-MCP `saltare__*` tools + Action Cable realtime + system reach (iP3.4).
+thread + composer), and iP3.4 (the agent's **MCP `saltare__*` tools** — an
+`McpClient` over the Streamable-HTTP `/mcp` endpoint, appended after the device
+tools, so the on-device agent can act on the workspace) are done; the app builds,
+the browser renders, and the agent sheet shows the connected-tool count. Next:
+Action Cable realtime (iP3.5) + system reach (iP3.6).
 
 ## Packages
 
@@ -36,7 +40,7 @@ MCP `saltare__*` tools + Action Cable realtime + system reach (iP3.4).
 |---|---|
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
-| `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, and the `TranscriptReducer`. Ported from the Android `:agent` with its test suites (37 tests). |
+| `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, the `TranscriptReducer`, and the **MCP client** (`McpClient`/`McpToolSource` — `saltare__*` workspace tools over the Streamable-HTTP `/mcp` endpoint). Ported from the Android `:agent` with its test suites (42 tests). |
 | `Packages/SaltareWorkspace` | The **saltare REST client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), and native device auth (`POST /api/v1/auth/token`). 12 tests. |
 
 (Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
