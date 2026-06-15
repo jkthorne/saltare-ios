@@ -18,9 +18,10 @@ design system) is done; iP1 (the universal-input command surface) is next.
 | Package | What |
 |---|---|
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
+| `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (59 tests). |
 
-(Future: `SaltareKit` domain, `SaltareAgent`, the app target, and the keyboard/
-widget/share/intents extensions — see the roadmap.)
+(Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
+share/intents extensions — see the roadmap.)
 
 ## Build & test
 

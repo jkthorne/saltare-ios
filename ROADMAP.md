@@ -39,8 +39,9 @@ fight the platform — and say so honestly.
 saltare-ios/
 ├── Packages/
 │   ├── SaltareHUD/      design system (foundation-only SwiftUI) + Showcase + token tests   ← iP0 (DONE)
-│   ├── SaltareKit/      pure-Swift domain: models, Calculator, UnitConvert, Frecency,
-│   │                    SearchResult, AgentLoop core, Anthropic + MCP + REST clients
+│   ├── SaltareKit/      pure-Swift domain. Search engine DONE (iP1.1): Calculator,
+│   │                    UnitConvert, Frecency, SearchResult, AppSearch. Later:
+│   │                    AgentLoop core, Anthropic + MCP + REST clients
 │   └── SaltareAgent/    tool registry + executor (domain in pkg, iOS tools in app target)
 ├── Saltare/             SwiftUI App: Command surface · Chat · Tasks · Docs · DBs · Agents · Settings
 ├── SaltareKeyboard/     Keyboard Extension
@@ -79,14 +80,52 @@ Foundation-only SwiftUI package, no UIKit chrome. Ported token-for-token from
   `SaltareColorsTest.kt` analog) + `SaltareTypographyTests`. `swift test` green.
 
 ### iP1 — Command surface (universal input)
-The launcher concept as the app's home + system entry points.
-- Port the pure logic 1:1 into `SaltareKit`: `SearchResult` enum (same row
-  order **Calc → AppHits → SettingsLinks(≤2) → Contacts → AgentStub**),
-  `Calculator`, `UnitConvert`, `Frecency` — with their unit tests.
-- App launch via URL schemes + a curated catalog (iOS can't enumerate apps);
-  Contacts via `CNContactStore`; the supported settings deep-link set.
-- System-wide reach: App Shortcuts + Spotlight, a Home/Lock-Screen Widget with
-  a quick-capture field, an iOS Control, Siri ("Ask saltare…").
+The launcher concept as the app's home + system entry points. Four milestones
+mirroring the Android L1→L4 cadence (search core → universal input → system
+depth → feel). The app target is built with **XcodeGen** (a checked-in
+`project.yml`; the `.xcodeproj` is generated, never committed).
+
+iOS-honest deltas from Android (each mapped, not faked):
+- **No app enumeration** → a curated `AppCatalog` + saltare destinations,
+  probed with `canOpenURL` (declared schemes, ≤50). Unknown names fall through
+  to the AgentStub (the intended design).
+- **Settings deep-links are mostly private API** → ship only the public ones
+  (`openSettingsURLString`, `openNotificationSettingsURLString`) and repurpose
+  the row for in-app settings/permission jumps; never `App-Prefs:`.
+- **Work-profile / quiet-mode** `SearchResult` cases dropped (no iOS analog).
+- **Auto-launch-as-you-type** logic ported but defaults OFF (launching another
+  app yanks the user out of saltare).
+
+#### iP1.1 — Search engine ✅ DONE (2026-06-14)
+`Packages/SaltareKit` pure-Swift package (iOS 17+/macOS 13+, no UIKit/SwiftUI —
+the "domain is pure JVM" rule). `swift build` + `swift test` green (**59 tests**).
+Ported 1:1 from the Android `:launcher` `domain/`, including the Kotlin test
+suites:
+- `SearchResult` (trimmed enum, same row order **Calc → AppHits →
+  SettingsLinks(≤2) → Contacts → AgentStub**), `AppEntry`/`AppKey`.
+- `AppSearch` — normalize/tokens (diacritic-strip, punctuation-as-word-break),
+  rank (exact > word-prefix > substring > subsequence≥3), stable assembly,
+  `withContacts` splice, `autoLaunchCandidate` guard rails.
+- `Calculator` (shunting-yard, unary minus, `%`/`^` right-assoc, comma-decimals,
+  non-finite → nil), `UnitConvert` (length/mass/data/temp, affine temp),
+  `Frecency` (`count × 2^(−ageDays/14)`, read-time decay, prune to 100).
+- `SettingsLinks` (iOS catalog) + `AppCatalog` (curated externals + builtins).
+
+#### iP1.0 — App target + DI (next)
+Create the `Saltare` XcodeGen app (consuming SaltareHUD + SaltareKit), an
+`AppGraph` manual-DI container, and the command-surface shell (`HudTextField`
++ results list under `.saltareTheme`). *Acceptance: runs in the simulator.*
+
+#### iP1.2 — Universal-input depth
+Render every `SearchResult` row; curated app catalog + URL-scheme launch;
+Contacts GRANT + CALL/SMS rows (debounced `CNContactStore`); settings/permission
+links; AgentStub row (placeholder tap until iP2); copy-on-tap Calc;
+frecency-ordered blank list + NEW tags; the `RecordingLauncher` choke point.
+
+#### iP1.3 — System reach + feel
+App Shortcut ("Search/Ask saltare") via App Intents, CoreSpotlight donation, a
+Home/Lock-Screen Widget with a deep-linked quick-input, an iOS Control; haptics,
+VoiceOver, Dynamic Type, snapshot goldens of the surface states.
 
 ### iP2 — On-device agent (`SaltareAgent`)
 - Manual streaming tool loop over the Anthropic API via `URLSession` SSE,
