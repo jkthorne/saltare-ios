@@ -244,19 +244,41 @@ permission GRANT, a model picker, and an API-key settings screen. `SaltareAgent`
   screenshot-verified (presented via an env-gated UI-test hook).
 
 ### iP3 — Deep `saltare` integration
-- **Auth** (the one real server gap): `POST /api/v1/auth/token` (email/password
-  → scoped `sk_sal_` token) stored in Keychain. API-key paste bootstraps until
-  then.
-- **MCP client** → `saltare__*` workspace tools (Streamable HTTP, bearer token).
-- **REST surfaces** over `/api/v1/*`: HUD-styled Chat (channels/threads/DMs/
-  agent-DMs), Tasks (list/board/calendar), Documents, Databases, Agents.
-- **Realtime** via an Action Cable Swift client (needs token auth on the cable
-  connection — small server follow-on).
-- **Push** (APNs already built server-side) via the token-authed device-token
-  path; taps deep-link to the right surface.
-- **CoreSpotlight** indexing (the web command palette → OS search),
-  **Live Activities / Dynamic Island** (agent thinking, pipelines, voice),
-  **Widgets**, **Share extension**, **App Intents**.
+The original thesis. The server already exposes everything (REST `/api/v1/*`,
+native auth `POST /api/v1/auth/token` → `sk_sal_` + `rt_sal_`, MCP `/mcp`, and an
+**inference proxy** `/api/v1/inference/v1/messages` — server-held Anthropic key +
+credit metering, so the agent can run with just the workspace token).
+
+#### iP3.1 — Workspace client core ✅ DONE (2026-06-15)
+`Packages/SaltareWorkspace` pure-Swift package (iOS 17+/macOS 13+, Foundation
+only). `swift test` green (**12 tests**) — models decode the exact serializer
+shapes; endpoints + request building tested.
+- **Models** (`Decodable`, ported from `Api::V1::*Serializer`): `AuthTokens`
+  (device session), `CurrentSession` (`/me`), `WorkspaceTask`, `Channel`,
+  `Message`, `Agent`, `Document`, `ActorRef`, the `{data:…}` envelope + the
+  `{error:{code,message}}` envelope.
+- **`WorkspaceEndpoint`** — pure request builders (auth token/refresh/signout,
+  me, tasks, channels, messages, agents+`message`, documents); correct param
+  nesting (`{task:{…}}`, `{message:{channel_id,body}}`, `content`,
+  `email_address`); auth endpoints skip the bearer gate.
+- **`WorkspaceClient`** — `URLSession` executor; Bearer auth via a
+  `TokenProviding` seam; unwraps `{data:…}` for resources, decodes auth/`me`
+  directly; surfaces the `{error}` envelope as `WorkspaceError.api`.
+
+#### iP3.2 — Auth + token vault (next)
+The native sign-in screen (email/password → `signIn`), the Keychain token vault
+(`sk_sal_` access + `rt_sal_` refresh, with rotation on 401), and pointing the
+agent at the **inference proxy** so it runs on the workspace token (no pasted
+Anthropic key).
+
+#### iP3.3 — Workspace surfaces
+HUD-styled Chat (channels/threads/DMs/agent-DMs), Tasks, Documents, Agents over
+the REST client; the agent's MCP `saltare__*` tools (`ToolRegistry.remoteTools`).
+
+#### iP3.4 — Realtime + system reach
+Action Cable Swift client (token-authed), APNs push (server-side done),
+CoreSpotlight content indexing, Live Activities, workspace Widgets, Share
+extension.
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/

@@ -21,7 +21,13 @@ vault), the iOS toolbox (registry/executor + intent/`device_status`/GRANT-gated
 Contacts & Calendar tools, `open_app`), and the HUD agent sheet (streaming
 transcript, tool chips, permission GRANT, model picker) wired to the AgentStub
 row. `SaltareAgent` is **37 tests** green; the app builds and the sheet renders
-on the simulator. **iP3 (deep `saltare` integration — MCP + REST) is next.**
+on the simulator.
+
+**iP3 (deep `saltare` integration) is underway:** iP3.1 — the pure workspace
+client (`SaltareWorkspace`: REST `/api/v1/*` models + endpoints + `URLSession`
+client, native auth, 12 tests) — is done. The server also exposes an inference
+proxy, so the agent can run on the workspace token alone. Next: native sign-in +
+the token vault (iP3.2).
 
 ## Packages
 
@@ -30,6 +36,7 @@ on the simulator. **iP3 (deep `saltare` integration — MCP + REST) is next.**
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
 | `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, and the `TranscriptReducer`. Ported from the Android `:agent` with its test suites (37 tests). |
+| `Packages/SaltareWorkspace` | The **saltare REST client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), and native device auth (`POST /api/v1/auth/token`). 12 tests. |
 
 (Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
 share/intents extensions — see the roadmap.)
