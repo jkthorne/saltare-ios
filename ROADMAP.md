@@ -127,11 +127,24 @@ simulator and runs:
   iP1.2. Verified on the iOS 26.5 simulator: brand + scan bar + input + the
   blank-query catalog list render under `.saltareTheme(.dark)`.
 
-#### iP1.2 — Universal-input depth
-Render every `SearchResult` row; curated app catalog + URL-scheme launch;
-Contacts GRANT + CALL/SMS rows (debounced `CNContactStore`); settings/permission
-links; AgentStub row (placeholder tap until iP2); copy-on-tap Calc;
-frecency-ordered blank list + NEW tags; the `RecordingLauncher` choke point.
+#### iP1.2 — Universal-input depth ✅ DONE (2026-06-14)
+Every `SearchResult` row is now wired to its action. `swift test` (SaltareKit)
+green (**63 tests**, +`ContactSearch`); app builds + runs.
+- **Launch**: `canOpenURL` installed-filtering of the catalog (builtins always;
+  externals gated, schemes declared in `LSApplicationQueriesSchemes`) → on the
+  simulator the blank list correctly shrinks to builtins + Maps. App hits open
+  via `UIKitLauncher` through the `RecordingLauncher` **choke point**, which
+  records frecency first; the blank list re-orders by `Frecency`
+  (`FrecencyStore`, `UserDefaults`, corruption-tolerant; injected `NowProviding`).
+- **Contacts**: GRANT flow via `CNContactStore` — `.contactsGrant` row for
+  name-like queries when undetermined; on grant, a debounced (250ms) native
+  name-predicate search splices `.contact` rows before the agent stub; tap →
+  `tel:`. Pure ranking in `SaltareKit.ContactSearch` (tested).
+- **Calc**: copy-on-tap → pasteboard + transient HUD toast.
+- **Settings links**: `openSettingsURLString` / notification settings; in-app
+  routes deferred to iP3. **AgentStub**: placeholder toast until iP2.
+- Dropped: **NEW tags** (iOS can't detect installs — no analog) and
+  auto-launch-on-type (defaults off; deferred). Honest deltas, logged here.
 
 #### iP1.3 — System reach + feel
 App Shortcut ("Search/Ask saltare") via App Intents, CoreSpotlight donation, a

@@ -11,9 +11,9 @@ the `saltare` Rails workspace through MCP and the REST API.
 > Controls, Live Activities, Share extension).
 
 **Status & direction: see [ROADMAP.md](ROADMAP.md).** iP0 (`SaltareHUD`), iP1.1
-(`SaltareKit` search engine), and iP1.0 (the app target + command surface) are
-done — the app builds and runs on the simulator. iP1.2 (row actions, Contacts,
-launch) is next.
+(`SaltareKit` engine), iP1.0 (app target + command surface), and iP1.2 (row
+actions — launch/frecency, Contacts, copy) are done; the app builds and runs on
+the simulator. iP1.3 (App Intents / Spotlight / Widget / Control + a11y) is next.
 
 ## Packages
 

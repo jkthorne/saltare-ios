@@ -3,16 +3,17 @@ import SaltareHUD
 import SaltareKit
 
 /// The command surface — the app's front door. One HUD field is the universal
-/// input; deterministic results render below in the row-order contract. iP1.0
-/// is the shell: the engine is live, row *actions* land in iP1.2.
+/// input; deterministic results render below in the row-order contract, each
+/// row wired to its action (launch / copy / call / grant).
 struct CommandSurfaceView: View {
     @State private var model: CommandSurfaceModel
 
     @Environment(\.saltareColors) private var colors
     @Environment(\.saltareTypography) private var typo
 
+    @MainActor
     init(graph: AppGraph) {
-        _model = State(initialValue: CommandSurfaceModel(search: graph.search))
+        _model = State(initialValue: CommandSurfaceModel(graph: graph))
     }
 
     var body: some View {
@@ -35,6 +36,7 @@ struct CommandSurfaceView: View {
             }
             .padding(20)
         }
+        .overlay(alignment: .bottom) { toast }
     }
 
     private var header: some View {
@@ -51,7 +53,7 @@ struct CommandSurfaceView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(Array(model.results.enumerated()), id: \.offset) { index, result in
-                    CommandRow(result: result, onSelect: select)
+                    CommandRow(result: result) { model.select($0) }
                     if index < model.results.count - 1 {
                         HudDivider()
                     }
@@ -61,10 +63,16 @@ struct CommandSurfaceView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
-    /// Placeholder selection sink. iP1.2 routes app hits to a launcher, calc to
-    /// the clipboard, contacts to call/SMS; iP2 wires the agent stub.
-    private func select(_ result: SearchResult) {
-        // intentionally inert for the iP1.0 shell
+    @ViewBuilder private var toast: some View {
+        if let message = model.toast {
+            HudText(message, color: colors.arcBright, style: typo.monoBody)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(colors.panelSolid)
+                .cornerBrackets(color: colors.arc, bracketSize: 10, strokeWidth: 1.5)
+                .padding(.bottom, 28)
+                .transition(.opacity)
+        }
     }
 }
 

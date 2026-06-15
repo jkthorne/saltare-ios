@@ -21,6 +21,29 @@ targets:
     dependencies:
       - package: SaltareHUD
       - package: SaltareKit
+    info:
+      path: Saltare/Info.plist
+      properties:
+        CFBundleDisplayName: saltare
+        UILaunchScreen: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        # Dark is the system's identity; lock the UIKit chrome to it too.
+        UIUserInterfaceStyle: Dark
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSContactsUsageDescription: "saltare searches your contacts so you can call or message them straight from the universal input."
+        # canOpenURL probes the curated catalog (iOS can't enumerate apps).
+        LSApplicationQueriesSchemes:
+          - music
+          - maps
+          - spotify
+          - youtube
+          - whatsapp
+          - slack
+          - github
+          - googlegmail
+          - tg
+          - things
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app
@@ -29,11 +52,4 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
-        GENERATE_INFOPLIST_FILE: YES
         ENABLE_PREVIEWS: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_CFBundleDisplayName: saltare
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        # Dark is the system's identity; lock the UIKit chrome to it too.
-        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
