@@ -15,14 +15,18 @@ universal-input command surface: `SaltareHUD` design system, `SaltareKit`
 engine, the app target, wired row actions (launch/frecency, Contacts, copy), and
 system reach (App Intents/Spotlight/Siri, a Widget + iOS Control, deep links,
 haptics, VoiceOver). The app + widget extension build and run on the simulator.
-**iP2 (the on-device Claude agent) is next.**
+**iP2 (the on-device Claude agent) is underway:** iP2.1 — the pure agent core
+(`SaltareAgent`: the manual tool loop + domain, ported 1:1 from the Android
+`:agent`, 14 tests) — is done. Next: the Anthropic `URLSession` SSE client +
+Keychain key (iP2.2).
 
 ## Packages
 
 | Package | What |
 |---|---|
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
-| `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (59 tests). |
+| `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
+| `Packages/SaltareAgent` | The **pure-Swift agent core** (no UIKit/SDK/network) — the manual streaming tool loop (`AgentLoop`) + domain (`AgentModel`, `ToolSpec`, `LlmClient`, `AgentHistory`, `SystemPromptText`). Ported 1:1 from the Android `:agent` `domain/` + `loop/` with its `AgentLoopTest` suite (14 tests). |
 
 (Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
 share/intents extensions — see the roadmap.)

@@ -42,7 +42,8 @@ saltare-ios/
 │   ├── SaltareKit/      pure-Swift domain. Search engine DONE (iP1.1): Calculator,
 │   │                    UnitConvert, Frecency, SearchResult, AppSearch. Later:
 │   │                    AgentLoop core, Anthropic + MCP + REST clients
-│   └── SaltareAgent/    tool registry + executor (domain in pkg, iOS tools in app target)
+│   └── SaltareAgent/    agent core DONE (iP2.1): AgentLoop + domain. Later:
+│                        Anthropic SSE client, tool registry + executor, iOS tools
 ├── Saltare/             SwiftUI App (XcodeGen project.yml). Command surface DONE (iP1.0);
 │                        later: Chat · Tasks · Docs · DBs · Agents · Settings
 ├── SaltareKeyboard/     Keyboard Extension
@@ -167,17 +168,39 @@ App + widget extension both build; App Shortcuts metadata extracted.
   *content* indexing → iP3 (needs workspace data).
 
 ### iP2 — On-device agent (`SaltareAgent`)
-- Manual streaming tool loop over the Anthropic API via `URLSession` SSE,
-  preserving the invariants: one `tool_result` per `tool_use` id; parallel
-  calls → one user message; thinking blocks echoed with untouched signatures;
-  permission gates HOLD the request. Same aliases (`claude-opus-4-8`,
-  `claude-sonnet-4-6`, `claude-haiku-4-5`); adaptive thinking on Opus/Sonnet.
-- iOS as the toolbox: visible-intent analogs (`tel:`/`sms:`/`mailto:`/MapKit/
-  EventKit/open_app) + read tools behind a GRANT flow (Contacts, Calendar/
-  Reminders, Location, `device_status`) + App-Intents invocation.
-- Secrets in Keychain (Secure Enclave + biometric); demo mode without a key;
-  Siri/App-Intents assistant entry. Tool registry order is the prompt-cache
-  prefix — never reorder; MCP tools append last.
+The crown jewel, sequenced like iP1 (pure core first).
+
+#### iP2.1 — Agent core ✅ DONE (2026-06-14)
+`Packages/SaltareAgent` pure-Swift package (iOS 17+/macOS 13+, no UIKit/SDK/
+network — the Android `:agent` `domain/` + `loop/`). `swift test` green
+(**14 tests**, the `AgentLoopTest` suite ported 1:1).
+- `AgentLoop.run` — the manual tool loop as `async` + an `AsyncStream` wrapper,
+  preserving every invariant: one `tool_result` per `tool_use` id; parallel
+  calls → ONE `toolResults` message; `needsPermission` HOLDS the loop until
+  `awaitPermission` resolves, then re-executes; assistant blocks (incl. thinking
+  signatures) echoed verbatim; a failed/**cancelled** first request leaves
+  history untouched (cancel-mid-stream tested).
+- Domain: `AgentModel` (exact aliases, adaptive-thinking flag), `ToolSpec`/
+  `ToolOutcome`/`ToolRunner`, `LlmClient`/`LlmRequest`/`LlmStreamEvent`,
+  `AssistantBlock`/`HistoryMessage`/`AgentHistory`, `AgentEvent`,
+  `SystemPromptText` (stable cache-prefix + volatile suffix), `JSONValue`
+  (Sendable stand-in for `Map<String, Any?>`).
+
+#### iP2.2 — Anthropic client + key vault (next)
+`URLSession` SSE `LlmClient` (streaming tool loop; thinking signatures intact),
+the request builder (system = `stable` + cache breakpoint + `volatile`; tool
+list order = the cache prefix), Keychain-sealed API key (Secure Enclave +
+biometric), and a keyless demo client.
+
+#### iP2.3 — iOS tools (the toolbox)
+`ToolRegistry` (stable order; MCP appends last) + `ToolExecutor` + iOS tools:
+visible-intent analogs (`tel:`/`sms:`/`mailto:`/MapKit/EventKit/`open_app`) and
+read tools behind the GRANT flow (Contacts, Calendar/Reminders, Location,
+`device_status`); `LauncherCapabilities` wired to the command surface's catalog.
+
+#### iP2.4 — Agent UI + entry
+The agent sheet (transcript, tool chips, streaming, permission grant, model
+picker) wired to the `AgentStub` row and the "Ask saltare" intent.
 
 ### iP3 — Deep `saltare` integration
 - **Auth** (the one real server gap): `POST /api/v1/auth/token` (email/password
