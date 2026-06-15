@@ -13,7 +13,7 @@ final class WorkspaceSession {
     private(set) var errorMessage: String?
     private(set) var busy = false
 
-    private let client: WorkspaceClient
+    let client: WorkspaceClient
     private let vault: TokenVault
 
     init(baseURL: URL, vault: TokenVault = TokenVault()) {
@@ -34,7 +34,7 @@ final class WorkspaceSession {
             vault.save(tokens)
             stored = vault.stored()
         } catch {
-            errorMessage = Self.describe(error)
+            errorMessage = workspaceErrorText(error)
         }
         busy = false
     }
@@ -59,18 +59,5 @@ final class WorkspaceSession {
         } catch {
             return false
         }
-    }
-
-    private static func describe(_ error: Error) -> String {
-        if let workspaceError = error as? WorkspaceError {
-            switch workspaceError {
-            case let .api(_, message, _): return message
-            case .notAuthenticated: return "Not signed in."
-            case let .http(status): return "Server error (HTTP \(status))."
-            case let .transport(message): return "Network error: \(message)"
-            case .decoding: return "Unexpected response from the server."
-            }
-        }
-        return error.localizedDescription
     }
 }

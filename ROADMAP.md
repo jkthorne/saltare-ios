@@ -285,13 +285,26 @@ Native sign-in wired end-to-end; app builds + the sign-in screen renders.
   `saltare://signin` builtin → `CommandRoute.signIn`. Live sign-in needs a
   saltare account + server — screen + wiring are build/screenshot-verified.
 
-#### iP3.3 — Workspace surfaces
-HUD-styled Chat (channels/threads/DMs/agent-DMs), Tasks, Documents, Agents over
-the REST client; the agent's MCP `saltare__*` tools (`ToolRegistry.remoteTools`).
+#### iP3.3 — Workspace surfaces ✅ DONE (2026-06-15)
+The HUD workspace browser over the REST client; app builds + renders.
+- **`WorkspaceStore`** (`@Observable`) — `Loadable` collections (channels, tasks,
+  agents, documents) with idle/loading/loaded/failed states + a `demo()` seam.
+- **`WorkspaceView`** — a `NavigationStack` sheet with a HUD tab bar
+  (CHAT/TASKS/AGENTS/DOCS), a generic `LoadableList`, and rows: channels
+  (count), tasks (`NierCheck` by state + due), agents (status + model badge),
+  documents (published badge). Falls back to `SignInView` when signed out.
+- **`ChannelThreadView`** — a channel's messages (sender-tagged) + a composer
+  (`ChannelThreadModel.send` → optimistic append). **`DocumentDetailView`** —
+  the doc body.
+- **Wiring:** `saltare://workspace` builtin → `CommandRoute.workspace`.
+- **Verification note:** live data needs sign-in; screenshot uses a `demo()`
+  store (CHAT shows #general/#engineering/#design) — the data flow is the
+  iP3.1-tested `WorkspaceClient`.
 
-#### iP3.4 — Realtime + system reach
-Action Cable Swift client (token-authed), APNs push (server-side done),
-CoreSpotlight content indexing, Live Activities, workspace Widgets, Share
+#### iP3.4 — MCP tools + realtime + system reach (next)
+The agent's MCP `saltare__*` tools (`ToolRegistry.remoteTools` append-last), an
+Action Cable Swift client (token-authed live messages), APNs push (server-side
+done), CoreSpotlight content indexing, Live Activities, workspace Widgets, Share
 extension.
 
 ### iP4 — `SaltareKeyboard` extension

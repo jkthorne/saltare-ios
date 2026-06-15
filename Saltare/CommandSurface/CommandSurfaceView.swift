@@ -53,6 +53,7 @@ struct CommandSurfaceView: View {
             case let .agent(query): AgentSheet(assembly: agent, initialQuery: query)
             case .agentSettings: AgentSettingsView(keyStore: agent.keyStore)
             case .signIn: SignInView(session: workspace)
+            case .workspace: WorkspaceView(session: workspace)
             }
         }
         .task {
@@ -60,6 +61,7 @@ struct CommandSurfaceView: View {
             switch ProcessInfo.processInfo.environment["SALTARE_PRESENT"] {
             case "agent": model.presentedRoute = .agent(query: "")
             case "signin": model.presentedRoute = .signIn
+            case "workspace": model.presentedRoute = .workspace
             default: break
             }
         }
