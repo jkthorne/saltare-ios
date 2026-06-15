@@ -3,9 +3,9 @@
 .swiftpm/
 Package.resolved
 
-# Xcode
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
+# Xcode — the project is generated from project.yml by XcodeGen; never commit it
+*.xcodeproj
+*.xcworkspace
 xcuserdata/
 DerivedData/
 *.xcuserstate

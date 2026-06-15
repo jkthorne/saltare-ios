@@ -10,8 +10,10 @@ the `saltare` Rails workspace through MCP and the REST API.
 > iOS surfaces Android doesn't have (App Intents/Siri, Spotlight, Widgets,
 > Controls, Live Activities, Share extension).
 
-**Status & direction: see [ROADMAP.md](ROADMAP.md).** iP0 (the `SaltareHUD`
-design system) is done; iP1 (the universal-input command surface) is next.
+**Status & direction: see [ROADMAP.md](ROADMAP.md).** iP0 (`SaltareHUD`), iP1.1
+(`SaltareKit` search engine), and iP1.0 (the app target + command surface) are
+done — the app builds and runs on the simulator. iP1.2 (row actions, Contacts,
+launch) is next.
 
 ## Packages
 
@@ -25,18 +27,28 @@ share/intents extensions — see the roadmap.)
 
 ## Build & test
 
+The pure packages build and test on the Mac without a simulator:
+
 ```bash
-cd Packages/SaltareHUD
-swift build
-swift test
+( cd Packages/SaltareHUD && swift build && swift test )   # design system — 8 tests
+( cd Packages/SaltareKit && swift build && swift test )   # search engine — 59 tests
 ```
 
-Requires Xcode 26 / Swift 6.3. The package targets iOS 17+ and macOS 14+ (so the
-design system builds and tests on the Mac without a simulator). The app target
-will require iOS 18+.
+The app target is generated from `project.yml` by **XcodeGen** (the `.xcodeproj`
+is gitignored — regenerate it, never commit it):
 
-Open `Packages/SaltareHUD/Package.swift` in Xcode and use the `ShowcaseView`
-SwiftUI previews (Dark + Parchment) to see the system.
+```bash
+brew install xcodegen          # once
+xcodegen generate              # writes Saltare.xcodeproj
+open Saltare.xcodeproj          # ⌘R to run on a simulator
+# or headless:
+xcodebuild -project Saltare.xcodeproj -scheme Saltare -sdk iphonesimulator \
+  -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+```
+
+Requires Xcode 26 / Swift 6.3. The packages target iOS 17+/macOS 13–14; the app
+requires iOS 18+. Use the `ShowcaseView` previews (Dark + Parchment) in
+`SaltareHUD` to browse the design system.
 
 ## Design source of truth
 
