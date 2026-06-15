@@ -206,11 +206,24 @@ The Messages API boundary, Foundation-only in `SaltareAgent`. `swift test` green
   passcode is the boundary; biometric `SecAccessControl` is the documented
   upgrade path). Verified by reading the JSON-port via `JSONValue` Codable.
 
-#### iP2.3 — iOS tools (the toolbox)
-`ToolRegistry` (stable order; MCP appends last) + `ToolExecutor` + iOS tools:
-visible-intent analogs (`tel:`/`sms:`/`mailto:`/MapKit/EventKit/`open_app`) and
-read tools behind the GRANT flow (Contacts, Calendar/Reminders, Location,
-`device_status`); `LauncherCapabilities` wired to the command surface's catalog.
+#### iP2.3 — iOS tools (the toolbox) ✅ DONE (2026-06-15)
+`SaltareAgent` `swift test` green (**31 tests**); app builds with the catalog
+wired in.
+- **Package (pure, tested):** `ToolRegistry` (stable order = prompt-cache prefix;
+  `remoteTools` MCP `saltare__*` append last), `ToolExecutor` (dispatch +
+  injected `permissionGranted` pre-check → `.needsPermission` holds the loop),
+  `LauncherCapabilities`, `Dictionary.str/int` input accessors.
+- **App tools (`AgentTools.local`, stable order):** `open_app` (via
+  `CommandSurfaceCapabilities` → the command-surface catalog + `canOpenURL`);
+  visible-intent tools `phone_call`/`send_sms`/`send_email`/`open_url`/`show_map`
+  (`UIApplication.open`); `device_status` (battery + `NWPathMonitor` network);
+  GRANT-gated `contacts_search`/`calendar_upcoming`/`create_calendar_event`
+  (`CNContactStore` / `EKEventStore`). `AgentPermissions` maps the GRANT strings
+  to iOS authorization (status + request); `AgentAssembly` wires registry →
+  executor → loop → Anthropic/Demo client.
+- **iOS deltas (no API):** dropped `set_alarm`/`set_timer`/`share_text`; calendar
+  create uses EventKit **write** (Android opens an editor); `device_status` omits
+  DND/volume (no public read).
 
 #### iP2.4 — Agent UI + entry
 The agent sheet (transcript, tool chips, streaming, permission grant, model

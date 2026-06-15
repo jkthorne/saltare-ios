@@ -11,6 +11,8 @@ packages:
     path: Packages/SaltareHUD
   SaltareKit:
     path: Packages/SaltareKit
+  SaltareAgent:
+    path: Packages/SaltareAgent
 
 targets:
   Saltare:
@@ -21,6 +23,7 @@ targets:
     dependencies:
       - package: SaltareHUD
       - package: SaltareKit
+      - package: SaltareAgent
       - target: SaltareWidgets       # embed the widget/control extension
     info:
       path: Saltare/Info.plist
@@ -33,6 +36,8 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         NSContactsUsageDescription: "saltare searches your contacts so you can call or message them straight from the universal input."
+        NSCalendarsUsageDescription: "saltare reads and adds calendar events when you ask the agent about your schedule."
+        NSCalendarsFullAccessUsageDescription: "saltare reads and adds calendar events when you ask the agent about your schedule."
         # canOpenURL probes the curated catalog (iOS can't enumerate apps).
         LSApplicationQueriesSchemes:
           - music

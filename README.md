@@ -15,11 +15,12 @@ universal-input command surface: `SaltareHUD` design system, `SaltareKit`
 engine, the app target, wired row actions (launch/frecency, Contacts, copy), and
 system reach (App Intents/Spotlight/Siri, a Widget + iOS Control, deep links,
 haptics, VoiceOver). The app + widget extension build and run on the simulator.
-**iP2 (the on-device Claude agent) is underway:** iP2.1 (agent core — the manual
-tool loop + domain) and iP2.2 (the Anthropic Messages API client — `URLSession`
-SSE, request builder, SSE parser, Keychain key vault) are done — `SaltareAgent`
-is 26 tests green. Next: the iOS tools (`device_status`, intents, GRANT-gated
-provider tools) in iP2.3.
+**iP2 (the on-device Claude agent) is underway:** iP2.1 (agent core), iP2.2
+(Anthropic Messages API client + Keychain key vault), and iP2.3 (the iOS
+toolbox — registry/executor + intent/`device_status`/GRANT-gated Contacts &
+Calendar tools, `open_app` via the command-surface catalog) are done —
+`SaltareAgent` is 31 tests green; the app builds with the tools wired. Next: the
+agent sheet UI (iP2.4) wired to the AgentStub row and the "Ask saltare" intent.
 
 ## Packages
 
