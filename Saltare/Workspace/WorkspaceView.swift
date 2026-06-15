@@ -23,7 +23,11 @@ struct WorkspaceView: View {
         self.demoMode = demo
         _store = State(initialValue: demo
             ? .demo(client: session.client)
-            : WorkspaceStore(client: session.client, indexer: SpotlightIndexer.shared))
+            : WorkspaceStore(
+                client: session.client,
+                indexer: SpotlightIndexer.shared,
+                workspaceName: session.stored?.workspaceName ?? "Workspace"
+            ))
     }
 
     var body: some View {

@@ -61,6 +61,12 @@ targets:
               - saltare
         # The agent-turn Live Activity (Lock Screen + Dynamic Island).
         NSSupportsLiveActivities: true
+    entitlements:
+      path: Saltare/Saltare.entitlements
+      properties:
+        # Shared container for the workspace Widget snapshot (+ future Share ext).
+        com.apple.security.application-groups:
+          - group.ai.saltare.app
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app
@@ -79,6 +85,7 @@ targets:
       - path: Shared       # the shared ActivityAttributes type
     dependencies:
       - package: SaltareHUD
+      - package: SaltareWorkspace   # WorkspaceSnapshot for the workspace widget
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
       - sdk: ActivityKit.framework
@@ -88,6 +95,11 @@ targets:
         CFBundleDisplayName: saltare
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: SaltareWidgets/SaltareWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.ai.saltare.app
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app.widgets

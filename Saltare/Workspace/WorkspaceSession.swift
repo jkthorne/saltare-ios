@@ -48,6 +48,7 @@ final class WorkspaceSession {
         try? await client.signOut()
         vault.clear()
         SpotlightIndexer.shared.clear() // drop indexed workspace items
+        WorkspaceSnapshotStore.clear()  // drop the widget snapshot
         stored = nil
         busy = false
     }

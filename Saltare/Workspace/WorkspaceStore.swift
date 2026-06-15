@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WidgetKit
 import SaltareWorkspace
 
 /// Loads workspace collections over the REST client. One per `WorkspaceView`.
@@ -8,15 +9,19 @@ import SaltareWorkspace
 final class WorkspaceStore {
     let client: WorkspaceClient
     private let indexer: SpotlightIndexing?
+    /// Non-nil in a signed-in session → channel/task loads publish an App Group
+    /// snapshot for the workspace Widget (nil in demo / tests skips it).
+    private let workspaceName: String?
 
     var channels: Loadable<[Channel]> = .idle
     var tasks: Loadable<[WorkspaceTask]> = .idle
     var agents: Loadable<[Agent]> = .idle
     var documents: Loadable<[Document]> = .idle
 
-    init(client: WorkspaceClient, indexer: SpotlightIndexing? = nil) {
+    init(client: WorkspaceClient, indexer: SpotlightIndexing? = nil, workspaceName: String? = nil) {
         self.client = client
         self.indexer = indexer
+        self.workspaceName = workspaceName
     }
 
     /// A store preloaded with sample data — for previews / screenshots (no
@@ -42,7 +47,7 @@ final class WorkspaceStore {
     func loadChannels(force: Bool = false) async {
         if !force, channels.value != nil { return }
         channels = .loading
-        do { channels = .loaded(try await client.channels()) }
+        do { channels = .loaded(try await client.channels()); publishSnapshot() }
         catch { channels = .failed(workspaceErrorText(error)) }
     }
     func loadTasks(force: Bool = false) async {
@@ -52,7 +57,21 @@ final class WorkspaceStore {
             let loaded = try await client.tasks()
             tasks = .loaded(loaded)
             indexer?.index(SpotlightIndex.taskEntries(loaded)) // surface tasks in Spotlight
+            publishSnapshot()
         } catch { tasks = .failed(workspaceErrorText(error)) }
+    }
+
+    /// Write the App Group snapshot + nudge the workspace Widget to reload.
+    private func publishSnapshot() {
+        guard let workspaceName else { return }
+        let snapshot = WorkspaceSnapshot.make(
+            workspaceName: workspaceName,
+            channels: channels.value ?? [],
+            tasks: tasks.value ?? [],
+            now: Date()
+        )
+        WorkspaceSnapshotStore.save(snapshot)
+        WidgetCenter.shared.reloadTimelines(ofKind: SaltareWidgetKind.workspace)
     }
     func loadAgents(force: Bool = false) async {
         if !force, agents.value != nil { return }

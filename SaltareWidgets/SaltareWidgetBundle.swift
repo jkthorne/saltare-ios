@@ -8,6 +8,7 @@ import SwiftUI
 struct SaltareWidgetBundle: WidgetBundle {
     var body: some Widget {
         SaltareSearchWidget()
+        SaltareWorkspaceWidget()
         SaltareControl()
         AgentLiveActivityWidget()
     }

@@ -411,10 +411,32 @@ widget extension build.
 - **Verification note:** a live activity needs an agent turn + on-device render
   (not CLI-drivable); the presentation mapping is unit-tested, the UI builds.
 
-#### iP3.8 — System reach: shared-container surfaces (next)
-Workspace **Widgets** (recent channels/tasks) and a **Share extension** (send to
-a channel / create a task) — both need an **App Group** + a shared-Keychain token
-(the widget/extension run out-of-process and must read workspace data / auth).
+#### iP3.8 — System reach: App Group + workspace Widget ✅ DONE (2026-06-15)
+A medium Home/Lock-Screen widget shows recent channels + open tasks, read from a
+shared App Group snapshot the app writes. `SaltareWorkspace` `swift test` green
+(**28 tests**, +3); app + widget build.
+- **Package (pure, tested):** `WorkspaceSnapshot` (Codable digest:
+  workspaceName + channels/tasks `Item`s carrying a deep-link id) + `make(...)` —
+  maps the REST models, filters closed tasks, folds due dates into the subtitle.
+- **Shared (app + widget):** `WorkspaceSnapshotStore` reads/writes the snapshot
+  JSON in the App Group container (`group.ai.saltare.app`; a no-op when the
+  container is absent, e.g. unsigned sim builds); `SaltareWidgetKind` shares the
+  kind ids so app + widget never drift.
+- **App:** `WorkspaceStore` publishes a snapshot + `WidgetCenter.reloadTimelines`
+  when channels/tasks load (gated on a signed-in workspace name; nil in
+  demo/tests); `WorkspaceSession.signOut` clears it.
+- **Widget:** `SaltareWorkspaceWidget` (`.systemMedium`) renders the snapshot's
+  channels + tasks columns (HUD-styled), deep-links `saltare://workspace`, and
+  shows an "Open saltare to sync" empty state. No network/token in-process.
+- **App Group entitlement** added to the app + widget targets (XcodeGen
+  `entitlements:`; the generated `.entitlements` are gitignored like the plists).
+- **Verification note:** the App Group container needs a signed build to populate
+  at runtime; the snapshot mapping/codec is unit-tested, the widget UI builds.
+
+#### iP3.9 — System reach: Share extension (next)
+A `SaltareShare` extension (send shared text/URL to a channel / create a task) —
+needs the workspace token in a **shared Keychain access group** (the extension
+authenticates the REST client out-of-process) + the App Group already in place.
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/

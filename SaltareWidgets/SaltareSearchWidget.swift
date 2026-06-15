@@ -21,7 +21,7 @@ struct SaltareProvider: TimelineProvider {
 /// A Home/Lock-Screen widget that deep-links into the universal input.
 struct SaltareSearchWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "ai.saltare.widget.search", provider: SaltareProvider()) { _ in
+        StaticConfiguration(kind: SaltareWidgetKind.search, provider: SaltareProvider()) { _ in
             SaltareWidgetView()
                 .widgetURL(URL(string: "saltare://search"))
         }
