@@ -19,8 +19,24 @@ final class AgentSessionModel {
     private let history = AgentHistory()
     private var task: Task<Void, Never>?
     private var permissionContinuation: CheckedContinuation<Bool, Never>?
+    private let liveActivity = AgentLiveActivity()
 
     init(assembly: AgentAssembly) { self.assembly = assembly }
+
+    /// Tool chips so far (count + most recent name) — feeds the Live Activity.
+    private var toolStats: (count: Int, last: String?) {
+        let names = transcript.compactMap { message -> String? in
+            if case let .toolChip(_, name, _) = message { return name }
+            return nil
+        }
+        return (names.count, names.last)
+    }
+
+    private func syncActivity() {
+        let stats = toolStats
+        let phase = self.phase
+        Task { await liveActivity.update(phase: phase, toolCount: stats.count, lastTool: stats.last) }
+    }
 
     var hasCredentials: Bool { assembly.hasCredentials }
     var isStreaming: Bool { task != nil }
@@ -43,6 +59,7 @@ final class AgentSessionModel {
         errorBanner = nil
         transcript.append(.user(query))
         phase = .streaming
+        syncActivity()
 
         let stream = assembly.loop.runStream(
             history: history,
@@ -58,21 +75,25 @@ final class AgentSessionModel {
                 guard let self else { return }
                 transcript = TranscriptReducer.reduce(transcript, event)
                 if case let .error(message, _) = event { errorBanner = message }
+                syncActivity()
             }
             guard let self else { return }
             phase = errorBanner != nil ? .error : .idle
             task = nil
+            syncActivity()
         }
     }
 
     private func awaitPermission(_ permission: String) async -> Bool {
         phase = .awaitingPermission
         pendingPermission = permission
+        syncActivity()
         let granted = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
             permissionContinuation = continuation
         }
         pendingPermission = nil
         phase = .streaming
+        syncActivity()
         return granted
     }
 
@@ -100,6 +121,7 @@ final class AgentSessionModel {
         pendingPermission = nil
         transcript = TranscriptReducer.sealAll(transcript)
         if phase != .error { phase = .idle }
+        Task { await liveActivity.end() }
     }
 
     func cycleModel() { model = model.cycled() }

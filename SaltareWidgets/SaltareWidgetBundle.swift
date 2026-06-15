@@ -9,5 +9,6 @@ struct SaltareWidgetBundle: WidgetBundle {
     var body: some Widget {
         SaltareSearchWidget()
         SaltareControl()
+        AgentLiveActivityWidget()
     }
 }

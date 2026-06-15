@@ -38,7 +38,9 @@ Realtime's two server prerequisites (bearer-token auth on the cable + a JSON
 `MessagesChannel`) are now **closed server-side** in the `saltare` repo, so it's
 end-to-end capable. iP3.6 (the first **system-reach** cut — **CoreSpotlight**
 indexing of workspace tasks/docs, deep-linking back into the workspace browser)
-is done. Next: live surfaces — Live Activities, Widgets, Share extension (iP3.7).
+is done, and iP3.7 adds a **Live Activity** for a running agent turn (Lock Screen
++ Dynamic Island, HUD-styled). Next: shared-container surfaces — workspace Widgets
++ a Share extension (iP3.8).
 
 ## Packages
 
@@ -46,7 +48,7 @@ is done. Next: live surfaces — Live Activities, Widgets, Share extension (iP3.
 |---|---|
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
-| `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, the `TranscriptReducer`, and the **MCP client** (`McpClient`/`McpToolSource` — `saltare__*` workspace tools over the Streamable-HTTP `/mcp` endpoint). Ported from the Android `:agent` with its test suites (42 tests). |
+| `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, the `TranscriptReducer`, the **MCP client** (`McpClient`/`McpToolSource` — `saltare__*` workspace tools over the Streamable-HTTP `/mcp` endpoint), and the Live Activity presentation (`AgentActivityPresentation`). Ported from the Android `:agent` with its test suites (45 tests). |
 | `Packages/SaltareWorkspace` | The **saltare REST + realtime client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), native device auth (`POST /api/v1/auth/token`), the **Action Cable** client (`ActionCableProtocol` wire codec + `RealtimeClient` websocket transport), and the **Spotlight** mapping (`SpotlightEntry`/`SpotlightIndex`). 25 tests. |
 
 (Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/

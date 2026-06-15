@@ -390,10 +390,31 @@ builds.
   on-device Spotlight (not CLI-drivable); the mapping is unit-tested and the
   wiring builds.
 
-#### iP3.7 — System reach: live surfaces (next)
-**Live Activities** (a running agent turn / task), workspace **Widgets** (recent
-channels/tasks via an App Group + shared token), and a **Share extension** (send
-to a channel / create a task). These need an App Group / extension targets.
+#### iP3.7 — System reach: agent-turn Live Activity ✅ DONE (2026-06-15)
+A running agent turn now surfaces as a Live Activity on the Lock Screen + Dynamic
+Island (HUD-styled). `SaltareAgent` `swift test` green (**45 tests**, +3); app +
+widget extension build.
+- **Package (pure, tested):** `AgentActivityPresentation` maps an `AgentPhase`
+  (+ tool count / last tool) to an `AgentActivitySnapshot` (status label, detail,
+  isActive) — so the app + widget stay dumb renderers.
+- **Shared:** `AgentActivityAttributes` (`ActivityAttributes`) compiled into BOTH
+  the app + widget targets (the documented ActivityKit sharing pattern, matched
+  by type name) — plain strings/ints, no `SaltareAgent` dep on the widget side.
+- **App:** `AgentLiveActivity` (nonisolated `@unchecked Sendable` — `Activity`'s
+  async `update`/`end` are nonisolated, so an actor would have to send the
+  non-`Sendable` `Activity` across isolation; a lock guards the lone handle).
+  `AgentSessionModel` requests/updates/ends it as the turn's phase changes.
+- **Widget:** `AgentLiveActivityWidget` (`ActivityConfiguration`) — Lock Screen +
+  Dynamic Island (compact/minimal/expanded), `NierMarker`/`NierDiamond`/`ScanBar`,
+  deep-links `saltare://agent`. `NSSupportsLiveActivities` on the app;
+  `ActivityKit.framework` on the widget.
+- **Verification note:** a live activity needs an agent turn + on-device render
+  (not CLI-drivable); the presentation mapping is unit-tested, the UI builds.
+
+#### iP3.8 — System reach: shared-container surfaces (next)
+Workspace **Widgets** (recent channels/tasks) and a **Share extension** (send to
+a channel / create a task) — both need an **App Group** + a shared-Keychain token
+(the widget/extension run out-of-process and must read workspace data / auth).
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/
