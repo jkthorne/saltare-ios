@@ -7,6 +7,11 @@ import SaltareWorkspace
 /// `TokenProviding` so the `WorkspaceClient` reads the access token through it.
 /// Device-only (`...ThisDeviceOnly`); the source of truth shared by the
 /// `WorkspaceSession` UI and the agent's inference-proxy credential.
+///
+/// Stored in a shared Keychain access group so the Share extension (a separate
+/// process) reads the same token. On unsigned simulator builds the access group
+/// isn't entitled, so Keychain ops no-op (return nil) — live sign-in needs a
+/// signed build, which was always the case.
 struct TokenVault: TokenProviding {
     struct Stored: Codable, Sendable, Equatable {
         var access: String
@@ -16,17 +21,32 @@ struct TokenVault: TokenProviding {
         var userEmail: String
     }
 
+    /// Matches the `keychain-access-groups` entitlement on the app + Share
+    /// extension; the team prefix is supplied by the entitlement at sign time.
+    static let sharedAccessGroup = "ai.saltare.shared"
+
     private let service = "ai.saltare.workspace"
     private let account = "session"
+    private let accessGroup: String?
 
-    func stored() -> Stored? {
-        let query: [String: Any] = [
+    init(accessGroup: String? = TokenVault.sharedAccessGroup) {
+        self.accessGroup = accessGroup
+    }
+
+    private func baseQuery() -> [String: Any] {
+        var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
         ]
+        if let accessGroup { query[kSecAttrAccessGroup as String] = accessGroup }
+        return query
+    }
+
+    func stored() -> Stored? {
+        var query = baseQuery()
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
               let data = item as? Data else { return nil }
@@ -51,21 +71,13 @@ struct TokenVault: TokenProviding {
         )
         guard let data = try? JSONEncoder().encode(stored) else { return }
         clear()
-        let attributes: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-        ]
+        var attributes = baseQuery()
+        attributes[kSecValueData as String] = data
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         SecItemAdd(attributes as CFDictionary, nil)
     }
 
     func clear() {
-        SecItemDelete([
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ] as CFDictionary)
+        SecItemDelete(baseQuery() as CFDictionary)
     }
 }

@@ -29,6 +29,7 @@ targets:
       - package: SaltareAgent
       - package: SaltareWorkspace
       - target: SaltareWidgets       # embed the widget/control extension
+      - target: SaltareShare         # embed the share extension
     info:
       path: Saltare/Info.plist
       properties:
@@ -64,9 +65,12 @@ targets:
     entitlements:
       path: Saltare/Saltare.entitlements
       properties:
-        # Shared container for the workspace Widget snapshot (+ future Share ext).
+        # Shared container for the workspace Widget snapshot.
         com.apple.security.application-groups:
           - group.ai.saltare.app
+        # Shared Keychain so the Share extension reads the workspace token.
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)ai.saltare.shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app
@@ -104,6 +108,43 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app.widgets
         PRODUCT_NAME: SaltareWidgets
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
+
+  SaltareShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SaltareShare
+      - path: Shared/TokenVault.swift   # only the shared Keychain vault (not the widget/ActivityKit files)
+    dependencies:
+      - package: SaltareHUD
+      - package: SaltareWorkspace
+    info:
+      path: SaltareShare/Info.plist
+      properties:
+        CFBundleDisplayName: Share to saltare
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+    entitlements:
+      path: SaltareShare/SaltareShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.ai.saltare.app
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)ai.saltare.shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app.share
+        PRODUCT_NAME: SaltareShare
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"

@@ -433,10 +433,23 @@ shared App Group snapshot the app writes. `SaltareWorkspace` `swift test` green
 - **Verification note:** the App Group container needs a signed build to populate
   at runtime; the snapshot mapping/codec is unit-tested, the widget UI builds.
 
-#### iP3.9 — System reach: Share extension (next)
-A `SaltareShare` extension (send shared text/URL to a channel / create a task) —
-needs the workspace token in a **shared Keychain access group** (the extension
-authenticates the REST client out-of-process) + the App Group already in place.
+#### iP3.9 — System reach: Share extension ✅ DONE (2026-06-15) — iP3 COMPLETE
+A `SaltareShare` extension turns shared text/URL into a task or a channel message.
+`SaltareWorkspace` `swift test` green (**34 tests**, +6); app + both extensions
+build.
+- **Package (pure, tested):** `ShareDraft.from(text:url:)` — first line (or URL
+  host) → title; text + URL → body (no dup).
+- **Shared Keychain:** `TokenVault` moved to `Shared/` and made access-group
+  aware (`ai.saltare.shared`), so the extension reads the same `sk_sal_` token the
+  app wrote. `keychain-access-groups` entitlement on the app + extension.
+- **Extension:** `ShareViewController` (the `com.apple.share-services` principal
+  class) extracts the shared text/URL, hosts `ShareView` — a HUD form to create a
+  task or post to a channel (channel picker loaded via the `WorkspaceClient`),
+  with a signed-out fallback. New `SaltareShare` app-extension target (embedded),
+  `App Group` + shared-Keychain entitlements.
+- **Verification note:** the shared Keychain needs a signed build (the access
+  group isn't entitled on the unsigned simulator); the draft parsing is
+  unit-tested and the extension builds.
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/

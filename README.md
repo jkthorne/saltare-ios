@@ -39,8 +39,10 @@ Realtime's two server prerequisites (bearer-token auth on the cable + a JSON
 end-to-end capable. iP3.6 (the first **system-reach** cut — **CoreSpotlight**
 indexing of workspace tasks/docs, deep-linking back into the workspace browser)
 is done, iP3.7 adds a **Live Activity** for a running agent turn (Lock Screen +
-Dynamic Island), and iP3.8 adds a **workspace Widget** (recent channels/tasks via
-a shared App Group snapshot). Next: a Share extension (iP3.9).
+Dynamic Island), iP3.8 adds a **workspace Widget** (recent channels/tasks via a
+shared App Group snapshot), and iP3.9 adds a **Share extension** (send shared
+text/URL to a channel or create a task, via the shared-Keychain token) — which
+completes iP3. Next: iP4 (the `SaltareKeyboard` extension).
 
 ## Packages
 
@@ -49,7 +51,7 @@ a shared App Group snapshot). Next: a Share extension (iP3.9).
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
 | `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, the `TranscriptReducer`, the **MCP client** (`McpClient`/`McpToolSource` — `saltare__*` workspace tools over the Streamable-HTTP `/mcp` endpoint), and the Live Activity presentation (`AgentActivityPresentation`). Ported from the Android `:agent` with its test suites (45 tests). |
-| `Packages/SaltareWorkspace` | The **saltare REST + realtime client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), native device auth (`POST /api/v1/auth/token`), the **Action Cable** client (`ActionCableProtocol` wire codec + `RealtimeClient` websocket transport), the **Spotlight** mapping (`SpotlightEntry`/`SpotlightIndex`), and the **widget snapshot** (`WorkspaceSnapshot`). 28 tests. |
+| `Packages/SaltareWorkspace` | The **saltare REST + realtime client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), native device auth (`POST /api/v1/auth/token`), the **Action Cable** client (`ActionCableProtocol` wire codec + `RealtimeClient` websocket transport), the **Spotlight** mapping (`SpotlightEntry`/`SpotlightIndex`), the **widget snapshot** (`WorkspaceSnapshot`), and the **share draft** parser (`ShareDraft`). 34 tests. |
 
 (Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
 share/intents extensions — see the roadmap.)
