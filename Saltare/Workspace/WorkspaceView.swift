@@ -8,7 +8,7 @@ import SaltareWorkspace
 struct WorkspaceView: View {
     @Bindable var session: WorkspaceSession
     @State private var store: WorkspaceStore
-    @State private var tab: WorkspaceTab = .channels
+    @State private var tab: WorkspaceTab
     private let demoMode: Bool
 
     @Environment(\.dismiss) private var dismiss
@@ -16,11 +16,14 @@ struct WorkspaceView: View {
     @Environment(\.saltareTypography) private var typo
 
     @MainActor
-    init(session: WorkspaceSession) {
+    init(session: WorkspaceSession, initialTab: WorkspaceTab = .channels) {
         self.session = session
+        _tab = State(initialValue: initialTab)
         let demo = ProcessInfo.processInfo.environment["SALTARE_DEMO"] != nil
         self.demoMode = demo
-        _store = State(initialValue: demo ? .demo(client: session.client) : WorkspaceStore(client: session.client))
+        _store = State(initialValue: demo
+            ? .demo(client: session.client)
+            : WorkspaceStore(client: session.client, indexer: SpotlightIndexer.shared))
     }
 
     var body: some View {

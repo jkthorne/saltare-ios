@@ -48,12 +48,18 @@ struct CommandSurfaceView: View {
             model.setQuery(query)
             router.pendingQuery = nil
         }
+        .onChange(of: router.pendingRoute) { _, newValue in
+            // A deep link / Spotlight tap routed an in-app destination here.
+            guard let route = newValue else { return }
+            model.presentedRoute = route
+            router.pendingRoute = nil
+        }
         .sheet(item: Binding(get: { model.presentedRoute }, set: { model.presentedRoute = $0 })) { route in
             switch route {
             case let .agent(query): AgentSheet(assembly: agent, initialQuery: query)
             case .agentSettings: AgentSettingsView(keyStore: agent.keyStore)
             case .signIn: SignInView(session: workspace)
-            case .workspace: WorkspaceView(session: workspace)
+            case let .workspace(tab): WorkspaceView(session: workspace, initialTab: tab)
             }
         }
         .task {
@@ -61,7 +67,7 @@ struct CommandSurfaceView: View {
             switch ProcessInfo.processInfo.environment["SALTARE_PRESENT"] {
             case "agent": model.presentedRoute = .agent(query: "")
             case "signin": model.presentedRoute = .signIn
-            case "workspace": model.presentedRoute = .workspace
+            case "workspace": model.presentedRoute = .workspace()
             default: break
             }
         }

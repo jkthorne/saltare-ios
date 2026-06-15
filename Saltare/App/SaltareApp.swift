@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreSpotlight
 import SaltareHUD
 
 /// The app entry point. Dark "android" theme is the system's identity (it does
@@ -13,6 +14,7 @@ struct SaltareApp: App {
                 .saltareTheme(colors: .dark)
                 .preferredColorScheme(.dark)
                 .onOpenURL { CommandRouter.shared.handle($0) }
+                .onContinueUserActivity(CSSearchableItemActionType) { CommandRouter.shared.handleSpotlight($0) }
         }
     }
 }

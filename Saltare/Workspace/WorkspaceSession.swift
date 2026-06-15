@@ -47,6 +47,7 @@ final class WorkspaceSession {
         busy = true
         try? await client.signOut()
         vault.clear()
+        SpotlightIndexer.shared.clear() // drop indexed workspace items
         stored = nil
         busy = false
     }

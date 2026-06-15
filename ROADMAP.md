@@ -368,10 +368,32 @@ correct independent of the server auth path.
   now end-to-end capable; a live socket still needs a running server + account
   (not CLI-drivable). Server work tracked on [[saltare-os-integration]].
 
-#### iP3.6 — System reach (next, workspace-powered)
-**CoreSpotlight** content indexing (workspace tasks/docs become Spotlight hits),
+#### iP3.6 — System reach: CoreSpotlight ✅ DONE (2026-06-15)
+Workspace tasks + documents are indexed into system Spotlight and deep-link back
+into the app on tap. `SaltareWorkspace` `swift test` green (**25 tests**, +4); app
+builds.
+- **Package (pure, tested):** `SpotlightEntry` + `SpotlightIndex` — maps a
+  `WorkspaceTask`/`Document` to an indexable entry (identifier = the
+  `saltare://task/<slug>` / `saltare://document/<slug>` deep link, a
+  `domainIdentifier` per type for batch replace, title, description, keywords).
+- **App:** `SpotlightIndexer` (`SpotlightIndexing` seam) wraps
+  `CSSearchableIndex.default()` — builds `CSSearchableItem`s + indexes/clears.
+  `WorkspaceStore` indexes tasks/docs as they load (injected `nil` in demo/tests);
+  `WorkspaceSession.signOut` clears the index.
+- **Tap routing:** `SaltareApp` handles `CSSearchableItemActionType` →
+  `CommandRouter.handleSpotlight` reads the item identifier (a `saltare://` URL) →
+  `handle(_:)` now routes `task/`/`document/` to the workspace browser on the
+  **right tab** (`CommandRoute.workspace(tab:)`), via a new `pendingRoute` the
+  command surface observes. Exact item-detail navigation (push the doc/task view)
+  is a follow-on — the browser lands on the correct tab today.
+- **Verification note:** indexing + tap-routing need a signed-in session +
+  on-device Spotlight (not CLI-drivable); the mapping is unit-tested and the
+  wiring builds.
+
+#### iP3.7 — System reach: live surfaces (next)
 **Live Activities** (a running agent turn / task), workspace **Widgets** (recent
-channels/tasks), and a **Share extension** (send to a channel / create a task).
+channels/tasks via an App Group + shared token), and a **Share extension** (send
+to a channel / create a task). These need an App Group / extension targets.
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/

@@ -8,14 +8,14 @@ enum CommandRoute: Identifiable, Equatable {
     case agent(query: String)
     case agentSettings
     case signIn
-    case workspace
+    case workspace(tab: WorkspaceTab = .channels)
 
     var id: String {
         switch self {
         case let .agent(query): "agent:\(query)"
         case .agentSettings: "agentSettings"
         case .signIn: "signIn"
-        case .workspace: "workspace"
+        case let .workspace(tab): "workspace:\(tab)"
         }
     }
 }
@@ -156,7 +156,7 @@ final class CommandSurfaceModel {
         switch url {
         case "saltare://agent": .agent(query: "")
         case "saltare://signin": .signIn
-        case "saltare://workspace": .workspace
+        case "saltare://workspace": .workspace()
         case "saltare://settings", "saltare://settings/agent": .agentSettings
         default: nil
         }

@@ -7,13 +7,17 @@ import SaltareWorkspace
 @Observable
 final class WorkspaceStore {
     let client: WorkspaceClient
+    private let indexer: SpotlightIndexing?
 
     var channels: Loadable<[Channel]> = .idle
     var tasks: Loadable<[WorkspaceTask]> = .idle
     var agents: Loadable<[Agent]> = .idle
     var documents: Loadable<[Document]> = .idle
 
-    init(client: WorkspaceClient) { self.client = client }
+    init(client: WorkspaceClient, indexer: SpotlightIndexing? = nil) {
+        self.client = client
+        self.indexer = indexer
+    }
 
     /// A store preloaded with sample data — for previews / screenshots (no
     /// network; the `loadX` guards short-circuit on already-loaded state).
@@ -44,8 +48,11 @@ final class WorkspaceStore {
     func loadTasks(force: Bool = false) async {
         if !force, tasks.value != nil { return }
         tasks = .loading
-        do { tasks = .loaded(try await client.tasks()) }
-        catch { tasks = .failed(workspaceErrorText(error)) }
+        do {
+            let loaded = try await client.tasks()
+            tasks = .loaded(loaded)
+            indexer?.index(SpotlightIndex.taskEntries(loaded)) // surface tasks in Spotlight
+        } catch { tasks = .failed(workspaceErrorText(error)) }
     }
     func loadAgents(force: Bool = false) async {
         if !force, agents.value != nil { return }
@@ -56,8 +63,11 @@ final class WorkspaceStore {
     func loadDocuments(force: Bool = false) async {
         if !force, documents.value != nil { return }
         documents = .loading
-        do { documents = .loaded(try await client.documents()) }
-        catch { documents = .failed(workspaceErrorText(error)) }
+        do {
+            let loaded = try await client.documents()
+            documents = .loaded(loaded)
+            indexer?.index(SpotlightIndex.documentEntries(loaded)) // surface docs in Spotlight
+        } catch { documents = .failed(workspaceErrorText(error)) }
     }
 }
 
