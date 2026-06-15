@@ -61,20 +61,26 @@ final class WorkspaceStore {
     }
 }
 
-/// One channel's message thread + composer.
+/// One channel's message thread + composer. When a `RealtimeClient` is present
+/// it subscribes to the channel's Action Cable stream and appends broadcast
+/// messages live (deduped against the REST load + optimistic sends).
 @MainActor
 @Observable
 final class ChannelThreadModel {
     let channel: Channel
     private let client: WorkspaceClient
+    private let realtime: RealtimeClient?
 
     var messages: Loadable<[Message]> = .idle
     var draft = ""
     var sending = false
+    /// True once the cable subscription is confirmed — drives the LIVE chip.
+    private(set) var live = false
 
-    init(channel: Channel, client: WorkspaceClient) {
+    init(channel: Channel, client: WorkspaceClient, realtime: RealtimeClient? = nil) {
         self.channel = channel
         self.client = client
+        self.realtime = realtime
     }
 
     func load() async {
@@ -89,10 +95,45 @@ final class ChannelThreadModel {
         draft = ""
         sending = true
         if let message = try? await client.sendMessage(channelId: channel.id, body: body) {
-            var current = messages.value ?? []
-            current.append(message)
-            messages = .loaded(current)
+            ingest(message)
         }
         sending = false
+    }
+
+    /// Hold the cable subscription open for as long as the thread is on screen.
+    /// Call from the view's `.task` — cancellation (view disappear) closes the
+    /// socket. A no-op when realtime is absent (demo / signed out).
+    func streamLive() async {
+        guard let realtime else { return }
+        let identifier = CableIdentifier.messages(channelId: channel.id)
+        let events = await realtime.connect()
+        await realtime.subscribe(identifier)
+        await withTaskCancellationHandler {
+            for await event in events {
+                switch event {
+                case .confirmed: live = true
+                case .rejected, .disconnect: live = false
+                case let .message(id, payload) where id == identifier:
+                    if let message = Self.decodeMessage(payload) { ingest(message) }
+                default: break
+                }
+            }
+            live = false
+        } onCancel: {
+            realtime.disconnect() // finishes the event stream, ending the loop above
+        }
+    }
+
+    private func ingest(_ message: Message) {
+        var current = messages.value ?? []
+        guard !current.contains(where: { $0.id == message.id }) else { return }
+        current.append(message)
+        messages = .loaded(current)
+    }
+
+    private static func decodeMessage(_ payload: Data) -> Message? {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try? decoder.decode(ChannelMessageEvent.self, from: payload).data
     }
 }

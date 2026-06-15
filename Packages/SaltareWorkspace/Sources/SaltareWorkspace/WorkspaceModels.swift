@@ -131,6 +131,14 @@ public struct Message: Decodable, Sendable, Identifiable, Equatable {
     public let updatedAt: String
 }
 
+/// A `MessagesChannel` realtime broadcast — `{event, data:<MessageSerializer>}`.
+/// `event` is `message_created` / `message_updated` / `message_deleted`; `data`
+/// reuses the same `Message` shape the REST endpoints return.
+public struct ChannelMessageEvent: Decodable, Sendable, Equatable {
+    public let event: String
+    public let data: Message
+}
+
 public struct Document: Decodable, Sendable, Identifiable, Equatable {
     public let id: Int
     public let slug: String

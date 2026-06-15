@@ -67,7 +67,9 @@ struct WorkspaceView: View {
         switch tab {
         case .channels:
             LoadableList(state: store.channels, load: { await store.loadChannels() }, empty: "No channels.") { channel in
-                NavigationLink { ChannelThreadView(channel: channel, client: store.client) } label: { channelRow(channel) }
+                NavigationLink {
+                    ChannelThreadView(channel: channel, client: store.client, realtime: demoMode ? nil : session.realtime)
+                } label: { channelRow(channel) }
             }
         case .tasks:
             LoadableList(state: store.tasks, load: { await store.loadTasks() }, empty: "No tasks.") { task in taskRow(task) }
@@ -191,17 +193,20 @@ private struct ChannelThreadView: View {
     @Environment(\.saltareTypography) private var typo
 
     @MainActor
-    init(channel: Channel, client: WorkspaceClient) {
+    init(channel: Channel, client: WorkspaceClient, realtime: RealtimeClient? = nil) {
         self.channel = channel
         self.client = client
-        _model = State(initialValue: ChannelThreadModel(channel: channel, client: client))
+        _model = State(initialValue: ChannelThreadModel(channel: channel, client: client, realtime: realtime))
     }
 
     var body: some View {
         ZStack {
             colors.abyss.ignoresSafeArea()
             VStack(alignment: .leading, spacing: 10) {
-                HudText("#\(channel.name ?? channel.slug)".uppercased(), color: colors.frost, style: typo.hudLabel)
+                HStack(spacing: 8) {
+                    HudText("#\(channel.name ?? channel.slug)".uppercased(), color: colors.frost, style: typo.hudLabel)
+                    if model.live { Badge("LIVE", tone: .materia) }
+                }
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
                         ForEach(model.messages.value ?? []) { message in messageRow(message) }
@@ -216,6 +221,7 @@ private struct ChannelThreadView: View {
         }
         .saltareTheme(colors: .dark)
         .task { await model.load() }
+        .task { await model.streamLive() } // held open while on screen; cancels on disappear
     }
 
     private func messageRow(_ message: Message) -> some View {

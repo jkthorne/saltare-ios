@@ -14,11 +14,15 @@ final class WorkspaceSession {
     private(set) var busy = false
 
     let client: WorkspaceClient
+    /// The Action Cable client for live channel messages — same token vault, so
+    /// it authenticates as soon as the user is signed in.
+    let realtime: RealtimeClient
     private let vault: TokenVault
 
     init(baseURL: URL, vault: TokenVault = TokenVault()) {
         self.vault = vault
         self.client = WorkspaceClient(baseURL: baseURL, tokens: vault)
+        self.realtime = RealtimeClient(baseURL: baseURL, tokens: vault)
         self.stored = vault.stored()
     }
 

@@ -334,12 +334,40 @@ connected-tool count.
   `/mcp` (taps + network the CLI can't drive) — the mapping/outcome logic is
   unit-tested, the wiring builds, and the count surfaces in the sheet.
 
-#### iP3.5 — Realtime (next)
-An **Action Cable** Swift client (token-authed `cable` socket) so a channel
-thread streams live messages instead of one-shot loads, plus native **APNs**
-registration accepting a bearer token (delivery is server-side done).
+#### iP3.5 — Realtime ✅ DONE (iOS client, 2026-06-15)
+The Action Cable Swift client so a channel thread streams live messages instead
+of one-shot loads. `SaltareWorkspace` `swift test` green (**21 tests**, +9); app
+builds. The wire protocol is standard Rails Action Cable, so the client is
+correct independent of the server auth path.
+- **Package (pure, tested):** `ActionCableProtocol` — encode/decode of the cable
+  wire protocol: outbound `subscribe`/`unsubscribe`/`message(action,payload)`
+  commands (identifier = the deterministic JSON-encoded `{channel,…params}`
+  string); inbound `welcome`/`ping`/`confirm_subscription`/`reject_subscription`/
+  `disconnect`/data frames. `CableIdentifier` (channel + typed `CableValue`
+  params; `.messages(channelId:)`) with a deterministic `encoded` + lenient
+  `decode`. Data frames surface the raw `message` payload as `Data` for the
+  consumer to decode (`ChannelMessageEvent` = `{event, data:<Message>}`).
+- **Transport:** `RealtimeClient` — one `URLSessionWebSocketTask` to
+  `<base>/cable` (derives `wss`/`ws`), attaches the workspace token as
+  `?access_token=` + an `Authorization` header, multiplexes subscriptions,
+  recursive receive loop → `AsyncStream<CableEvent>`. Foundation-only.
+- **App wiring:** `WorkspaceSession` owns the `RealtimeClient` (same vault);
+  `ChannelThreadModel.streamLive()` connects + subscribes, appends broadcast
+  messages (deduped against the REST load + optimistic sends), and flips a `live`
+  flag → a **LIVE** chip in the thread header. Held open by the view's `.task`
+  (cancel on disappear closes the socket). Demo mode passes `realtime: nil`.
+- **Server prerequisites (the two documented gaps — iOS targets this contract):**
+  (1) **token auth on the cable** — `ApplicationCable::Connection` today
+  authenticates only via the signed session cookie; it must also resolve a
+  bearer token (`?access_token=` / `Authorization`) to a user via the
+  ApiKey/DeviceSession. (2) a **JSON `MessagesChannel`** — live messages today
+  broadcast as Turbo Stream **HTML** (`broadcast_append_to … partial:`); the
+  native client needs a channel that `stream_for`s the chat channel and
+  broadcasts `{event:"message_created", data:<MessageSerializer>}`. Until both
+  land server-side the socket connects but the stream stays empty (REST load
+  still works); these belong to the [[saltare-os-integration]] server track.
 
-#### iP3.6 — System reach (workspace-powered)
+#### iP3.6 — System reach (next, workspace-powered)
 **CoreSpotlight** content indexing (workspace tasks/docs become Spotlight hits),
 **Live Activities** (a running agent turn / task), workspace **Widgets** (recent
 channels/tasks), and a **Share extension** (send to a channel / create a task).
