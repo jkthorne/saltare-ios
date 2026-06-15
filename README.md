@@ -15,12 +15,13 @@ universal-input command surface: `SaltareHUD` design system, `SaltareKit`
 engine, the app target, wired row actions (launch/frecency, Contacts, copy), and
 system reach (App Intents/Spotlight/Siri, a Widget + iOS Control, deep links,
 haptics, VoiceOver). The app + widget extension build and run on the simulator.
-**iP2 (the on-device Claude agent) is underway:** iP2.1 (agent core), iP2.2
-(Anthropic Messages API client + Keychain key vault), and iP2.3 (the iOS
-toolbox — registry/executor + intent/`device_status`/GRANT-gated Contacts &
-Calendar tools, `open_app` via the command-surface catalog) are done —
-`SaltareAgent` is 31 tests green; the app builds with the tools wired. Next: the
-agent sheet UI (iP2.4) wired to the AgentStub row and the "Ask saltare" intent.
+**iP2 is complete — the on-device Claude agent.** Manual streaming tool loop
+(`AgentLoop`), the Anthropic Messages API client (`URLSession` SSE + Keychain key
+vault), the iOS toolbox (registry/executor + intent/`device_status`/GRANT-gated
+Contacts & Calendar tools, `open_app`), and the HUD agent sheet (streaming
+transcript, tool chips, permission GRANT, model picker) wired to the AgentStub
+row. `SaltareAgent` is **37 tests** green; the app builds and the sheet renders
+on the simulator. **iP3 (deep `saltare` integration — MCP + REST) is next.**
 
 ## Packages
 
@@ -28,7 +29,7 @@ agent sheet UI (iP2.4) wired to the AgentStub row and the "Ask saltare" intent.
 |---|---|
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
-| `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, plus the Messages API layer (`AnthropicRequest` builder, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`, `DemoLlmClient`). Ported from the Android `:agent` with its test suites (26 tests). |
+| `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, and the `TranscriptReducer`. Ported from the Android `:agent` with its test suites (37 tests). |
 
 (Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
 share/intents extensions — see the roadmap.)

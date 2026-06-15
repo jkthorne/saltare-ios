@@ -3,6 +3,19 @@ import Observation
 import UIKit
 import SaltareKit
 
+/// In-app destinations the command surface presents as sheets.
+enum CommandRoute: Identifiable, Equatable {
+    case agent(query: String)
+    case agentSettings
+
+    var id: String {
+        switch self {
+        case let .agent(query): "agent:\(query)"
+        case .agentSettings: "agentSettings"
+        }
+    }
+}
+
 /// The command surface's view model. Owns catalog assembly (installed-filtering
 /// + frecency ordering), the deterministic search, the debounced Contacts
 /// splice, and action dispatch. `@MainActor` because selection touches UIKit
@@ -12,8 +25,10 @@ import SaltareKit
 final class CommandSurfaceModel {
     private(set) var query: String = ""
     private(set) var results: [SearchResult] = []
-    /// Transient bottom toast — copy confirmations and the iP2 agent placeholder.
+    /// Transient bottom toast — copy confirmations.
     private(set) var toast: String?
+    /// The presented sheet (agent / agent settings); the view binds to it.
+    var presentedRoute: CommandRoute?
 
     private let graph: AppGraph
     private let recording: RecordingLauncher
@@ -91,9 +106,13 @@ final class CommandSurfaceModel {
             showToast("Copied  \(display)")
 
         case let .appHit(app):
-            recording.launch(app) // the choke point records frecency
-            availableCatalog = Self.ordered(availableCatalog, graph: graph)
-            if query.isEmpty { recompute() }
+            if let route = Self.internalRoute(app.launchURL) {
+                presentedRoute = route // builtin saltare:// destinations
+            } else {
+                recording.launch(app) // the choke point records frecency
+                availableCatalog = Self.ordered(availableCatalog, graph: graph)
+                if query.isEmpty { recompute() }
+            }
 
         case let .settingsLink(def):
             openSettings(def.target)
@@ -108,9 +127,8 @@ final class CommandSurfaceModel {
                 scheduleContacts(for: query)
             }
 
-        case .agentStub:
-            // iP2 routes this to the on-device agent.
-            showToast("Agent arrives in iP2")
+        case let .agentStub(query):
+            presentedRoute = .agent(query: query)
         }
     }
 
@@ -120,9 +138,21 @@ final class CommandSurfaceModel {
             graph.launcher.launch(UIApplication.openSettingsURLString)
         case .appNotificationSettings:
             graph.launcher.launch(UIApplication.openNotificationSettingsURLString)
-        case .internalRoute:
-            // In-app navigation lands with the workspace surfaces (iP3).
-            showToast("Coming soon")
+        case let .internalRoute(route):
+            if let route = Self.internalRoute(route) {
+                presentedRoute = route
+            } else {
+                showToast("Coming soon") // e.g. theme — lands later
+            }
+        }
+    }
+
+    /// Maps a `saltare://` URL to its in-app sheet, or nil if it's not one.
+    private static func internalRoute(_ url: String?) -> CommandRoute? {
+        switch url {
+        case "saltare://agent": .agent(query: "")
+        case "saltare://settings", "saltare://settings/agent": .agentSettings
+        default: nil
         }
     }
 

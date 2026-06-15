@@ -22,9 +22,10 @@ struct AgentAssembly: Sendable {
             },
             apiKey: { keyStore.load() }
         )
-        let llm: LlmClient = keyStore.hasKey ? AnthropicLlmClient(config: config) : DemoLlmClient()
-
-        self.loop = AgentLoop(llm: llm, executor: executor)
+        // The apiKey closure resolves the Keychain per request, so a key added
+        // later in settings takes effect without rebuilding. The model gates on
+        // `keyStore.hasKey` before submitting (vs. surfacing a "no key" error).
+        self.loop = AgentLoop(llm: AnthropicLlmClient(config: config), executor: executor)
         self.tools = registry.tools
         self.keyStore = keyStore
     }

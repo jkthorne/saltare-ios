@@ -8,6 +8,7 @@ import SaltareKit
 struct CommandSurfaceView: View {
     @State private var model: CommandSurfaceModel
     private let router = CommandRouter.shared
+    private let agent: AgentAssembly
 
     @Environment(\.saltareColors) private var colors
     @Environment(\.saltareTypography) private var typo
@@ -15,6 +16,7 @@ struct CommandSurfaceView: View {
     @MainActor
     init(graph: AppGraph) {
         _model = State(initialValue: CommandSurfaceModel(graph: graph))
+        agent = graph.agent
     }
 
     var body: some View {
@@ -43,6 +45,18 @@ struct CommandSurfaceView: View {
             guard let query = newValue else { return }
             model.setQuery(query)
             router.pendingQuery = nil
+        }
+        .sheet(item: Binding(get: { model.presentedRoute }, set: { model.presentedRoute = $0 })) { route in
+            switch route {
+            case let .agent(query): AgentSheet(assembly: agent, initialQuery: query)
+            case .agentSettings: AgentSettingsView(keyStore: agent.keyStore)
+            }
+        }
+        .task {
+            // UI-test / screenshot hook (no-op in normal use).
+            if ProcessInfo.processInfo.environment["SALTARE_PRESENT_AGENT"] != nil {
+                model.presentedRoute = .agent(query: "")
+            }
         }
     }
 

@@ -16,6 +16,8 @@ final class AppGraph {
     let clock: NowProviding
     /// The full launch catalog (builtins + externals), before installed-filtering.
     let catalog: [AppEntry]
+    /// The on-device agent (registry → executor → loop → Anthropic client).
+    let agent: AgentAssembly
 
     nonisolated init(
         search: SearchProviding = SearchEngine(),
@@ -33,5 +35,6 @@ final class AppGraph {
         self.pasteboard = pasteboard
         self.clock = clock
         self.catalog = catalog
+        self.agent = AgentAssembly(catalog: catalog, launcher: launcher)
     }
 }

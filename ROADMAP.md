@@ -225,9 +225,23 @@ wired in.
   create uses EventKit **write** (Android opens an editor); `device_status` omits
   DND/volume (no public read).
 
-#### iP2.4 — Agent UI + entry
-The agent sheet (transcript, tool chips, streaming, permission grant, model
-picker) wired to the `AgentStub` row and the "Ask saltare" intent.
+#### iP2.4 — Agent UI + entry ✅ DONE (2026-06-15) — iP2 COMPLETE
+The agent sheet — a HUD surface with a streaming transcript, tool chips, the
+permission GRANT, a model picker, and an API-key settings screen. `SaltareAgent`
+`swift test` green (**37 tests**); app builds + the sheet renders on the sim.
+- **Package (pure, tested):** `ChatMessage`/`ChipStatus`/`AgentPhase` +
+  `TranscriptReducer` (folds `AgentEvent`s into the transcript — live streaming
+  message, chips rewritten by id). Ported 1:1 with the `TranscriptReducerTest`.
+- **App:** `AgentSessionModel` (`@Observable`, drives `loop.runStream`, bridges
+  the permission round-trip via a `CheckedContinuation`, gates on `hasKey`);
+  `AgentSheet` (transcript rows, tool chips by status tone, GRANT panel, model
+  picker, input); `AgentSettingsView` (Keychain key entry).
+- **Wiring:** the `AgentStub` row and `saltare://agent` builtin →
+  `CommandRoute.agent` sheet; the `saltare://settings/agent` link →
+  `agentSettings`. `AppGraph` builds the `AgentAssembly`.
+- **Verification note:** a live conversation needs an Anthropic key + taps the
+  CLI can't drive — the transcript logic is unit-tested, the sheet is
+  screenshot-verified (presented via an env-gated UI-test hook).
 
 ### iP3 — Deep `saltare` integration
 - **Auth** (the one real server gap): `POST /api/v1/auth/token` (email/password
