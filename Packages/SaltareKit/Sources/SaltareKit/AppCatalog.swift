@@ -33,6 +33,7 @@ public enum AppCatalog {
     /// external app. Always present.
     public static let builtins: [AppEntry] = [
         AppEntry(id: "saltare.agent", label: "Ask the Agent", launchURL: "saltare://agent"),
+        AppEntry(id: "saltare.signin", label: "Sign in to saltare", launchURL: "saltare://signin"),
         AppEntry(id: "saltare.settings", label: "Settings", launchURL: "saltare://settings"),
     ]
 }

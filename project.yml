@@ -13,6 +13,8 @@ packages:
     path: Packages/SaltareKit
   SaltareAgent:
     path: Packages/SaltareAgent
+  SaltareWorkspace:
+    path: Packages/SaltareWorkspace
 
 targets:
   Saltare:
@@ -24,6 +26,7 @@ targets:
       - package: SaltareHUD
       - package: SaltareKit
       - package: SaltareAgent
+      - package: SaltareWorkspace
       - target: SaltareWidgets       # embed the widget/control extension
     info:
       path: Saltare/Info.plist

@@ -1,3 +1,4 @@
+import Foundation
 import SaltareKit
 
 /// Manual dependency-injection container, mirroring the Android `AppGraph` on
@@ -16,6 +17,10 @@ final class AppGraph {
     let clock: NowProviding
     /// The full launch catalog (builtins + externals), before installed-filtering.
     let catalog: [AppEntry]
+    /// The saltare workspace base URL and Keychain session vault (shared by the
+    /// sign-in UI and the agent's inference-proxy credential).
+    let workspaceBaseURL = URL(string: "https://saltare.ai")!
+    let tokenVault = TokenVault()
     /// The on-device agent (registry → executor → loop → Anthropic client).
     let agent: AgentAssembly
 
@@ -35,6 +40,11 @@ final class AppGraph {
         self.pasteboard = pasteboard
         self.clock = clock
         self.catalog = catalog
-        self.agent = AgentAssembly(catalog: catalog, launcher: launcher)
+        self.agent = AgentAssembly(
+            catalog: catalog,
+            launcher: launcher,
+            workspaceBaseURL: workspaceBaseURL,
+            workspaceToken: { [tokenVault] in tokenVault.accessTokenSync() }
+        )
     }
 }

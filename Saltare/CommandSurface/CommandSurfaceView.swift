@@ -7,6 +7,7 @@ import SaltareKit
 /// row wired to its action (launch / copy / call / grant).
 struct CommandSurfaceView: View {
     @State private var model: CommandSurfaceModel
+    @State private var workspace: WorkspaceSession
     private let router = CommandRouter.shared
     private let agent: AgentAssembly
 
@@ -16,6 +17,7 @@ struct CommandSurfaceView: View {
     @MainActor
     init(graph: AppGraph) {
         _model = State(initialValue: CommandSurfaceModel(graph: graph))
+        _workspace = State(initialValue: WorkspaceSession(baseURL: graph.workspaceBaseURL, vault: graph.tokenVault))
         agent = graph.agent
     }
 
@@ -50,12 +52,15 @@ struct CommandSurfaceView: View {
             switch route {
             case let .agent(query): AgentSheet(assembly: agent, initialQuery: query)
             case .agentSettings: AgentSettingsView(keyStore: agent.keyStore)
+            case .signIn: SignInView(session: workspace)
             }
         }
         .task {
             // UI-test / screenshot hook (no-op in normal use).
-            if ProcessInfo.processInfo.environment["SALTARE_PRESENT_AGENT"] != nil {
-                model.presentedRoute = .agent(query: "")
+            switch ProcessInfo.processInfo.environment["SALTARE_PRESENT"] {
+            case "agent": model.presentedRoute = .agent(query: "")
+            case "signin": model.presentedRoute = .signIn
+            default: break
             }
         }
     }

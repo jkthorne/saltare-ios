@@ -7,11 +7,13 @@ import SaltareKit
 enum CommandRoute: Identifiable, Equatable {
     case agent(query: String)
     case agentSettings
+    case signIn
 
     var id: String {
         switch self {
         case let .agent(query): "agent:\(query)"
         case .agentSettings: "agentSettings"
+        case .signIn: "signIn"
         }
     }
 }
@@ -151,6 +153,7 @@ final class CommandSurfaceModel {
     private static func internalRoute(_ url: String?) -> CommandRoute? {
         switch url {
         case "saltare://agent": .agent(query: "")
+        case "saltare://signin": .signIn
         case "saltare://settings", "saltare://settings/agent": .agentSettings
         default: nil
         }

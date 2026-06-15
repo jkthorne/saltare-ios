@@ -137,6 +137,12 @@ struct AgentSheet: View {
 }
 
 #Preview {
-    AgentSheet(assembly: AgentAssembly(catalog: [], launcher: UIKitLauncher()), initialQuery: "")
-        .saltareTheme(colors: .dark)
+    AgentSheet(
+        assembly: AgentAssembly(
+            catalog: [], launcher: UIKitLauncher(),
+            workspaceBaseURL: URL(string: "https://saltare.ai")!, workspaceToken: { nil }
+        ),
+        initialQuery: ""
+    )
+    .saltareTheme(colors: .dark)
 }

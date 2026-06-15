@@ -265,11 +265,25 @@ shapes; endpoints + request building tested.
   `TokenProviding` seam; unwraps `{data:…}` for resources, decodes auth/`me`
   directly; surfaces the `{error}` envelope as `WorkspaceError.api`.
 
-#### iP3.2 — Auth + token vault (next)
-The native sign-in screen (email/password → `signIn`), the Keychain token vault
-(`sk_sal_` access + `rt_sal_` refresh, with rotation on 401), and pointing the
-agent at the **inference proxy** so it runs on the workspace token (no pasted
-Anthropic key).
+#### iP3.2 — Auth + token vault + inference proxy ✅ DONE (2026-06-15)
+Native sign-in wired end-to-end; app builds + the sign-in screen renders.
+- **`TokenVault`** (Keychain, `...ThisDeviceOnly`) — stores `sk_sal_` access +
+  `rt_sal_` refresh + workspace/user metadata; conforms to `TokenProviding` and
+  is the shared source of truth for the sign-in UI and the agent.
+- **`WorkspaceSession`** (`@Observable`) — `signIn(email:password:)` →
+  `WorkspaceClient.signIn` → vault; `signOut`; `refresh()` (rotate on 401);
+  maps `WorkspaceError` to a friendly banner.
+- **`SignInView`** — HUD email/password form; signed-in state shows the
+  workspace + sign-out.
+- **Inference proxy**: `AnthropicConfig` now resolves an `AnthropicEndpoint`
+  (base URL + `AnthropicCredential`) per request — `AgentAssembly` prefers the
+  workspace token (→ `/api/v1/inference` with `Authorization: Bearer`, so the
+  server holds the Anthropic key + meters credits) and falls back to a pasted
+  key (→ `api.anthropic.com` with `x-api-key`). The agent now runs with **no
+  on-device key** once signed in.
+- **Wiring:** `AppGraph` holds the `TokenVault` + workspace base URL; the
+  `saltare://signin` builtin → `CommandRoute.signIn`. Live sign-in needs a
+  saltare account + server — screen + wiring are build/screenshot-verified.
 
 #### iP3.3 — Workspace surfaces
 HUD-styled Chat (channels/threads/DMs/agent-DMs), Tasks, Documents, Agents over

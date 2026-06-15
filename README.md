@@ -23,11 +23,12 @@ transcript, tool chips, permission GRANT, model picker) wired to the AgentStub
 row. `SaltareAgent` is **37 tests** green; the app builds and the sheet renders
 on the simulator.
 
-**iP3 (deep `saltare` integration) is underway:** iP3.1 — the pure workspace
-client (`SaltareWorkspace`: REST `/api/v1/*` models + endpoints + `URLSession`
-client, native auth, 12 tests) — is done. The server also exposes an inference
-proxy, so the agent can run on the workspace token alone. Next: native sign-in +
-the token vault (iP3.2).
+**iP3 (deep `saltare` integration) is underway:** iP3.1 (the pure workspace
+client — REST `/api/v1/*` models, endpoints, `URLSession` client, native auth,
+12 tests) and iP3.2 (native **sign-in** + Keychain **token vault** + the agent
+running on the **inference proxy** with the workspace token — no on-device
+Anthropic key) are done; the app builds and the sign-in screen renders. Next:
+the workspace surfaces (Chat/Tasks/Docs/Agents + MCP `saltare__*`) in iP3.3.
 
 ## Packages
 

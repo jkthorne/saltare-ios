@@ -1,33 +1,48 @@
 import Foundation
 
-/// Configuration for the Anthropic client. The API key is fetched per request
-/// through a closure so the app can resolve it from the Keychain (and gate on
-/// biometrics) without this layer depending on Security/UIKit.
+/// How the request authenticates — direct Anthropic (`x-api-key`) or the
+/// saltare inference proxy (`Authorization: Bearer` with the workspace token).
+public enum AnthropicCredential: Sendable {
+    case apiKey(String)
+    case bearer(String)
+}
+
+/// Where a request goes + how it authenticates. Resolved per request so the
+/// agent can switch between the saltare inference proxy (when signed in) and
+/// direct Anthropic (a pasted key) without rebuilding.
+public struct AnthropicEndpoint: Sendable {
+    public let baseURL: URL
+    public let credential: AnthropicCredential
+    public init(baseURL: URL, credential: AnthropicCredential) {
+        self.baseURL = baseURL
+        self.credential = credential
+    }
+}
+
+/// Configuration for the Anthropic client. The endpoint (base URL + credential)
+/// is resolved per request through a closure so the app can pick the inference
+/// proxy or a pasted key without this layer touching Security/UIKit.
 public struct AnthropicConfig: Sendable {
-    public var baseURL: URL
     public var anthropicVersion: String
     public var maxTokens: Int
     public var systemStable: String
     /// Renders the volatile system suffix (time/locale/model) for a request.
     public var volatile: @Sendable (AgentModel) -> String
-    /// Resolves the API key (e.g. from the Keychain); `nil` → falls back to a
-    /// "no key" failure so the UI can prompt.
-    public var apiKey: @Sendable () async -> String?
+    /// Resolves the endpoint; `nil` → a "no credentials" failure the UI prompts on.
+    public var endpoint: @Sendable () async -> AnthropicEndpoint?
 
     public init(
-        baseURL: URL = URL(string: "https://api.anthropic.com")!,
         anthropicVersion: String = "2023-06-01",
         maxTokens: Int = AnthropicRequest.defaultMaxTokens,
         systemStable: String = SystemPromptText.stable,
         volatile: @escaping @Sendable (AgentModel) -> String,
-        apiKey: @escaping @Sendable () async -> String?
+        endpoint: @escaping @Sendable () async -> AnthropicEndpoint?
     ) {
-        self.baseURL = baseURL
         self.anthropicVersion = anthropicVersion
         self.maxTokens = maxTokens
         self.systemStable = systemStable
         self.volatile = volatile
-        self.apiKey = apiKey
+        self.endpoint = endpoint
     }
 }
 
@@ -54,8 +69,8 @@ public final class AnthropicLlmClient: LlmClient, @unchecked Sendable {
     }
 
     private func stream(_ request: LlmRequest, into continuation: AsyncStream<LlmStreamEvent>.Continuation) async {
-        guard let key = await config.apiKey(), !key.isEmpty else {
-            continuation.yield(.failed(message: "No Anthropic API key set.", retryable: false))
+        guard let endpoint = await config.endpoint() else {
+            continuation.yield(.failed(message: "No agent credentials. Sign in to saltare or add an Anthropic API key.", retryable: false))
             return
         }
 
@@ -68,10 +83,13 @@ public final class AnthropicLlmClient: LlmClient, @unchecked Sendable {
             maxTokens: config.maxTokens
         )
 
-        var urlRequest = URLRequest(url: config.baseURL.appendingPathComponent("v1/messages"))
+        var urlRequest = URLRequest(url: endpoint.baseURL.appendingPathComponent("v1/messages"))
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        urlRequest.setValue(key, forHTTPHeaderField: "x-api-key")
+        switch endpoint.credential {
+        case let .apiKey(key): urlRequest.setValue(key, forHTTPHeaderField: "x-api-key")
+        case let .bearer(token): urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         urlRequest.setValue(config.anthropicVersion, forHTTPHeaderField: "anthropic-version")
         do {
             urlRequest.httpBody = try body.serializedData()

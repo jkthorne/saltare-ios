@@ -21,14 +21,14 @@ final class AgentSessionModel {
 
     init(assembly: AgentAssembly) { self.assembly = assembly }
 
-    var hasKey: Bool { assembly.keyStore.hasKey }
+    var hasCredentials: Bool { assembly.hasCredentials }
     var isStreaming: Bool { task != nil }
 
     func submit() {
         let query = input.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty, task == nil else { return }
-        guard hasKey else {
-            errorBanner = "Add an Anthropic API key in Agent settings to use the agent."
+        guard hasCredentials else {
+            errorBanner = "Sign in to saltare, or add an Anthropic API key in Agent settings."
             return
         }
         input = ""
