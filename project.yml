@@ -21,6 +21,7 @@ targets:
     dependencies:
       - package: SaltareHUD
       - package: SaltareKit
+      - target: SaltareWidgets       # embed the widget/control extension
     info:
       path: Saltare/Info.plist
       properties:
@@ -44,6 +45,11 @@ targets:
           - googlegmail
           - tg
           - things
+        # Deep links from the widget (saltare://search?q=…).
+        CFBundleURLTypes:
+          - CFBundleURLName: ai.saltare.app
+            CFBundleURLSchemes:
+              - saltare
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app
@@ -53,3 +59,28 @@ targets:
         SWIFT_VERSION: "6.0"
         TARGETED_DEVICE_FAMILY: "1"
         ENABLE_PREVIEWS: YES
+
+  SaltareWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SaltareWidgets
+    dependencies:
+      - package: SaltareHUD
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: SaltareWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: saltare
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app.widgets
+        PRODUCT_NAME: SaltareWidgets
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES

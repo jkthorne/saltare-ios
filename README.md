@@ -10,10 +10,12 @@ the `saltare` Rails workspace through MCP and the REST API.
 > iOS surfaces Android doesn't have (App Intents/Siri, Spotlight, Widgets,
 > Controls, Live Activities, Share extension).
 
-**Status & direction: see [ROADMAP.md](ROADMAP.md).** iP0 (`SaltareHUD`), iP1.1
-(`SaltareKit` engine), iP1.0 (app target + command surface), and iP1.2 (row
-actions — launch/frecency, Contacts, copy) are done; the app builds and runs on
-the simulator. iP1.3 (App Intents / Spotlight / Widget / Control + a11y) is next.
+**Status & direction: see [ROADMAP.md](ROADMAP.md).** **iP1 is complete** — the
+universal-input command surface: `SaltareHUD` design system, `SaltareKit`
+engine, the app target, wired row actions (launch/frecency, Contacts, copy), and
+system reach (App Intents/Spotlight/Siri, a Widget + iOS Control, deep links,
+haptics, VoiceOver). The app + widget extension build and run on the simulator.
+**iP2 (the on-device Claude agent) is next.**
 
 ## Packages
 

@@ -7,6 +7,7 @@ import SaltareKit
 /// row wired to its action (launch / copy / call / grant).
 struct CommandSurfaceView: View {
     @State private var model: CommandSurfaceModel
+    private let router = CommandRouter.shared
 
     @Environment(\.saltareColors) private var colors
     @Environment(\.saltareTypography) private var typo
@@ -37,6 +38,12 @@ struct CommandSurfaceView: View {
             .padding(20)
         }
         .overlay(alignment: .bottom) { toast }
+        .onChange(of: router.pendingQuery) { _, newValue in
+            // App Intents / widget / Control routed a query here.
+            guard let query = newValue else { return }
+            model.setQuery(query)
+            router.pendingQuery = nil
+        }
     }
 
     private var header: some View {

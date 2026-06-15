@@ -84,6 +84,7 @@ final class CommandSurfaceModel {
     // MARK: - Selection
 
     func select(_ result: SearchResult) {
+        Haptics.tap()
         switch result {
         case let .calc(_, display):
             graph.pasteboard.copy(display)

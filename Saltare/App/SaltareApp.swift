@@ -12,6 +12,7 @@ struct SaltareApp: App {
             CommandSurfaceView(graph: graph)
                 .saltareTheme(colors: .dark)
                 .preferredColorScheme(.dark)
+                .onOpenURL { CommandRouter.shared.handle($0) }
         }
     }
 }

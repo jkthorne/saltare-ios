@@ -146,10 +146,25 @@ green (**63 tests**, +`ContactSearch`); app builds + runs.
 - Dropped: **NEW tags** (iOS can't detect installs — no analog) and
   auto-launch-on-type (defaults off; deferred). Honest deltas, logged here.
 
-#### iP1.3 — System reach + feel
-App Shortcut ("Search/Ask saltare") via App Intents, CoreSpotlight donation, a
-Home/Lock-Screen Widget with a deep-linked quick-input, an iOS Control; haptics,
-VoiceOver, Dynamic Type, snapshot goldens of the surface states.
+#### iP1.3 — System reach + feel ✅ DONE (2026-06-14) — iP1 COMPLETE
+The universal input now radiates onto the iOS surfaces Android can't reach.
+App + widget extension both build; App Shortcuts metadata extracted.
+- **App Intents + App Shortcuts** (`OpenSaltareIntent`, `SearchSaltareIntent` w/
+  a query parameter; `SaltareShortcuts`) → Spotlight / Siri / Shortcuts, no user
+  setup. `openAppWhenRun` routes through `CommandRouter` (shared singleton, since
+  entry points can't reach `AppGraph`).
+- **Deep links**: `saltare://search?q=…` via `.onOpenURL` → `CommandRouter` →
+  `model.setQuery`. Scheme registered (`CFBundleURLTypes`); iOS routes it.
+- **Widget extension** (`SaltareWidgets.appex`, embedded): a `SaltareSearchWidget`
+  (systemSmall + accessoryRectangular/Inline) deep-linking via `widgetURL`, and
+  an iOS 18 **`SaltareControl`** (Control Center / Lock Screen) opening the app.
+  HUD-styled.
+- **Feel**: light `Haptics.tap()` on every selection; VoiceOver labels + hints
+  per `SearchResult` row.
+- **Deferred (honest):** snapshot goldens of the surface (needs an app UI-test
+  target + a snapshot lib — surface is screenshot-verified for now); full Dynamic
+  Type (the HUD is fixed-size by design — VoiceOver covers a11y); CoreSpotlight
+  *content* indexing → iP3 (needs workspace data).
 
 ### iP2 — On-device agent (`SaltareAgent`)
 - Manual streaming tool loop over the Anthropic API via `URLSession` SSE,

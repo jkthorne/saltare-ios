@@ -27,6 +27,31 @@ struct CommandRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(HudIndicationStyle(focusColor: colors.arc))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityHint(accessibilityHint)
+    }
+
+    private var accessibilityLabel: String {
+        switch result {
+        case let .calc(expression, display): "\(expression) equals \(display)"
+        case let .appHit(app): app.displayLabel
+        case let .settingsLink(def): def.label
+        case let .contact(name, _): name
+        case .contactsGrant: "Allow contacts access"
+        case let .agentStub(query): "Ask the agent: \(query)"
+        }
+    }
+
+    private var accessibilityHint: String {
+        switch result {
+        case .calc: "Copies the result"
+        case .appHit: "Opens the app"
+        case .settingsLink: "Opens settings"
+        case .contact: "Calls the contact"
+        case .contactsGrant: "Grants access to your contacts"
+        case .agentStub: "Sends the query to the agent"
+        }
     }
 
     @ViewBuilder private var content: some View {
