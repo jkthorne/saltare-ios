@@ -1,0 +1,12 @@
+saltare-ios
+Copyright (c) Jack Thorne
+
+This product bundles the following third-party assets:
+
+- Geist & Geist Mono typefaces — © Vercel, licensed under the SIL Open Font
+  License 1.1. See
+  Packages/SaltareHUD/Sources/SaltareHUD/Resources/Fonts/OFL-Geist.txt.
+
+The NieR:Automata-inspired HUD design language is ported from the saltare web
+design system (saltare/app/assets/tailwind/application.css) and the saltareOS
+Android :hud library.
