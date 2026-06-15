@@ -186,11 +186,25 @@ network — the Android `:agent` `domain/` + `loop/`). `swift test` green
   `SystemPromptText` (stable cache-prefix + volatile suffix), `JSONValue`
   (Sendable stand-in for `Map<String, Any?>`).
 
-#### iP2.2 — Anthropic client + key vault (next)
-`URLSession` SSE `LlmClient` (streaming tool loop; thinking signatures intact),
-the request builder (system = `stable` + cache breakpoint + `volatile`; tool
-list order = the cache prefix), Keychain-sealed API key (Secure Enclave +
-biometric), and a keyless demo client.
+#### iP2.2 — Anthropic client + key vault ✅ DONE (2026-06-14)
+The Messages API boundary, Foundation-only in `SaltareAgent`. `swift test` green
+(**26 tests**); app builds with the Keychain store.
+- `AnthropicRequest` — the request builder (`POST /v1/messages`): system =
+  `stable` (with `cache_control: ephemeral` breakpoint) + `volatile` suffix;
+  `thinking: {type: adaptive}` on Opus/Sonnet, omitted on Haiku (`budget_tokens`
+  400s); tools carry `input_schema`; tool/`tool_result`/thinking-signature
+  echo. Tested against the JSON wire shape.
+- `AnthropicSSEParser` — accumulates `content_block_start/delta/stop` →
+  `message_delta`/`message_stop` into `LlmStreamEvent`s; text deltas stream,
+  tool_use input-JSON reassembles, thinking signatures survive. Tested against
+  scripted event streams.
+- `AnthropicLlmClient` — `URLSession.bytes` SSE stream; `AnthropicConfig` takes
+  an `apiKey` closure so the data layer stays Keychain-free. `DemoLlmClient`
+  runs keyless.
+- `KeychainApiKeyStore` (app target) — device-only Keychain (`...ThisDeviceOnly`).
+  Not biometric-gated by default (a Face ID prompt per turn is hostile — the
+  passcode is the boundary; biometric `SecAccessControl` is the documented
+  upgrade path). Verified by reading the JSON-port via `JSONValue` Codable.
 
 #### iP2.3 — iOS tools (the toolbox)
 `ToolRegistry` (stable order; MCP appends last) + `ToolExecutor` + iOS tools:

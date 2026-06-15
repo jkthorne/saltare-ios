@@ -23,7 +23,7 @@ public enum StopReason: Sendable, Equatable {
     case endTurn, toolUse, maxTokens, refusal, other
 }
 
-public enum LlmStreamEvent: Sendable {
+public enum LlmStreamEvent: Sendable, Equatable {
     /// Visible text token(s).
     case textDelta(String)
     /// The full turn finished. `assistantBlocks` is the complete accumulated
