@@ -34,8 +34,9 @@ tools, so the on-device agent can act on the workspace), and iP3.5 (the **Action
 Cable** realtime client — `RealtimeClient` over a `URLSession` websocket, so a
 channel thread streams live messages and shows a **LIVE** chip) are done; the app
 builds, the browser renders, and the agent sheet shows the connected-tool count.
-The realtime client targets two documented server prerequisites (bearer-token
-auth on the cable + a JSON `MessagesChannel`). Next: system reach (iP3.6).
+Realtime's two server prerequisites (bearer-token auth on the cable + a JSON
+`MessagesChannel`) are now **closed server-side** in the `saltare` repo, so it's
+end-to-end capable. Next: system reach (iP3.6).
 
 ## Packages
 

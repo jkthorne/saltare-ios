@@ -356,16 +356,17 @@ correct independent of the server auth path.
   messages (deduped against the REST load + optimistic sends), and flips a `live`
   flag → a **LIVE** chip in the thread header. Held open by the view's `.task`
   (cancel on disappear closes the socket). Demo mode passes `realtime: nil`.
-- **Server prerequisites (the two documented gaps — iOS targets this contract):**
-  (1) **token auth on the cable** — `ApplicationCable::Connection` today
-  authenticates only via the signed session cookie; it must also resolve a
-  bearer token (`?access_token=` / `Authorization`) to a user via the
-  ApiKey/DeviceSession. (2) a **JSON `MessagesChannel`** — live messages today
-  broadcast as Turbo Stream **HTML** (`broadcast_append_to … partial:`); the
-  native client needs a channel that `stream_for`s the chat channel and
-  broadcasts `{event:"message_created", data:<MessageSerializer>}`. Until both
-  land server-side the socket connects but the stream stays empty (REST load
-  still works); these belong to the [[saltare-os-integration]] server track.
+- **Server prerequisites ✅ CLOSED server-side (saltare `2fad49f8`):** (1)
+  **token auth on the cable** — `ApplicationCable::Connection` now resolves the
+  `sk_sal_` bearer token (`?access_token=` query param or `Authorization`) via
+  `ApiKey.authenticate`, falling back to the session cookie. (2) a **JSON
+  `MessagesChannel`** — membership-gated, streams `messages:channel:#{id}`;
+  `Message#broadcast_realtime_message` broadcasts `{event:"message_created",
+  data:<Api::V1::MessageSerializer>}` on create (alongside the existing Turbo
+  HTML broadcast for the web) — the exact shape the iOS `ChannelMessageEvent`/
+  `Message` decoder expects. Covered by connection + channel tests. Realtime is
+  now end-to-end capable; a live socket still needs a running server + account
+  (not CLI-drivable). Server work tracked on [[saltare-os-integration]].
 
 #### iP3.6 — System reach (next, workspace-powered)
 **CoreSpotlight** content indexing (workspace tasks/docs become Spotlight hits),
