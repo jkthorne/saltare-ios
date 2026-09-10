@@ -15,6 +15,12 @@ let package = Package(
         // auth (POST /api/v1/auth/token). Foundation-only; request building and
         // model decoding are unit-tested (live calls need a server + token).
         .target(name: "SaltareWorkspace"),
-        .testTarget(name: "SaltareWorkspaceTests", dependencies: ["SaltareWorkspace"]),
+        .testTarget(
+            name: "SaltareWorkspaceTests",
+            dependencies: ["SaltareWorkspace"],
+            // The server's golden payloads, copied verbatim by
+            // script/sync-goldens.sh and read through Bundle.module.
+            resources: [.copy("api_golden")]
+        ),
     ]
 )
