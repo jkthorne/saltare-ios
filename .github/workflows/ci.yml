@@ -1,0 +1,33 @@
+# Runs the Swift package tests. Until this file existed they ran only on
+# whichever Mac someone happened to open Xcode on.
+#
+# macOS runners are billed at 10x the Linux rate, so this stays deliberately
+# small: `swift test` per package, no simulator, no app build. Every package
+# declares a macOS platform, so none of them needs one.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  packages:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - SaltareAgent
+          - SaltareHUD
+          - SaltareKit
+          - SaltareWorkspace
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Test ${{ matrix.package }}
+        run: swift test --package-path Packages/${{ matrix.package }}
