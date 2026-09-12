@@ -64,5 +64,21 @@ jobs:
             -scheme Saltare \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             -quiet
+
+      # xcodebuild can exit 0 having compiled nothing — an empty scheme does
+      # exactly that, and did. A green build step is not evidence of a build, so
+      # assert the products exist.
+      - name: Verify the products were actually built
+        run: |
+          products="build/Build/Products/Debug-iphonesimulator"
+          app="$products/Saltare.app"
+          test -d "$app" || { echo "::error::no Saltare.app — the build compiled nothing"; ls -R "$products" || true; exit 1; }
+          echo "built: $app"
+          for ext in SaltareWidgets SaltareShare; do
+            found=$(find "$products" -name "$ext.appex" -maxdepth 4 -print -quit)
+            test -n "$found" || { echo "::error::no $ext.appex — the extension did not build"; exit 1; }
+            echo "built: $found"
+          done

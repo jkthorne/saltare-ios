@@ -6,6 +6,16 @@ options:
   createIntermediateGroups: true
   groupSortPosition: top
 
+# A shared scheme, so `xcodebuild -scheme Saltare` has something to build and
+# everyone who opens the project gets the same one. Without this, Xcode
+# autocreates a local scheme per machine and `xcodebuild` finds one with no
+# buildables — which exits 0 having compiled nothing.
+schemes:
+  Saltare:
+    build:
+      targets:
+        Saltare: all
+
 packages:
   SaltareHUD:
     path: Packages/SaltareHUD

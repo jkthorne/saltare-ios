@@ -12,6 +12,8 @@ SaltareWidgets/Info.plist
 *.entitlements
 xcuserdata/
 DerivedData/
+# CI builds into ./build via -derivedDataPath
+build/
 *.xcuserstate
 *.xcscmblueprint
 
