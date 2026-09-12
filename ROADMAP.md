@@ -1,9 +1,9 @@
 # saltare-ios roadmap
 
 The single source of truth for the native iOS app: what exists, what's in
-flight, and what's next. The iOS counterpart to `~/Developer/saltareos`
-(the Android take) — same NieR-HUD identity, same on-device-agent thesis,
-deeply integrated with the `saltare` Rails workspace.
+flight, and what's next. The iOS counterpart to `../saltareos` (the Android
+take) — same NieR-HUD identity, same on-device-agent thesis, deeply integrated
+with the `saltare` Rails workspace in `../saltare`.
 
 ## Vision
 

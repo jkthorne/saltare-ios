@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 Guidance for Claude Code in the `saltare-ios` repo — the native SwiftUI
-counterpart to `~/Developer/saltareos` (Android) and `~/Developer/saltare`
-(the Rails workspace).
+counterpart to `../saltareos` (Android) and `../saltare` (the Rails workspace),
+which sit beside this one in the same parent directory.
 
 ## What this is
 
