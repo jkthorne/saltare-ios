@@ -1,9 +1,15 @@
-# Runs the Swift package tests. Until this file existed they ran only on
-# whichever Mac someone happened to open Xcode on.
+# Runs the Swift package tests, then compiles the app. Until this file existed
+# they ran only on whichever Mac someone happened to open Xcode on.
 #
 # macOS runners are billed at 10x the Linux rate, so this stays deliberately
-# small: `swift test` per package, no simulator, no app build. Every package
-# declares a macOS platform, so none of them needs one.
+# small: `swift test` per package (no simulator — every package declares a macOS
+# platform), plus one app build.
+#
+# The app build earns its cost. The four packages are ~40% of the Swift here;
+# the rest — the app target, the widget/Live Activity extension and the share
+# extension — has no test target and, until this job, was compiled by nothing.
+# `xcodebuild` on the app also builds the two embedded extensions, so one job
+# covers all three. It does not run tests: there are none to run yet.
 name: CI
 
 on:
@@ -31,3 +37,32 @@ jobs:
 
       - name: Test ${{ matrix.package }}
         run: swift test --package-path Packages/${{ matrix.package }}
+
+  app:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      # The .xcodeproj is generated, never committed — so CI is also the check
+      # that project.yml still describes a project that can be generated.
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      # Unsigned: CI has no signing identity, and nothing here needs one to
+      # compile. `generic/platform=iOS Simulator` avoids booting a simulator.
+      - name: Build Saltare (app + widget + share extensions)
+        run: |
+          xcodebuild build \
+            -project Saltare.xcodeproj \
+            -scheme Saltare \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            -quiet
