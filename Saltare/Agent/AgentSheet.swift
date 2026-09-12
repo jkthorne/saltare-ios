@@ -1,6 +1,7 @@
 import SwiftUI
 import SaltareHUD
 import SaltareAgent
+import SaltareWorkspace
 
 /// The agent surface: a HUD sheet with a streaming transcript, tool chips, the
 /// permission GRANT affordance, and a model picker.
@@ -145,7 +146,7 @@ struct AgentSheet: View {
     AgentSheet(
         assembly: AgentAssembly(
             catalog: [], launcher: UIKitLauncher(),
-            workspaceBaseURL: URL(string: "https://saltare.ai")!, workspaceToken: { nil }
+            workspaceBaseURL: WorkspaceEnvironment.baseURL, workspaceToken: { nil }
         ),
         initialQuery: ""
     )

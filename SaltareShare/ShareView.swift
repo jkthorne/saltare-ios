@@ -33,7 +33,7 @@ struct ShareView: View {
         self.workspaceName = vault.stored()?.workspaceName ?? "saltare"
         // The extension often runs days after the app last did — an expired
         // access token here is the common case, not the edge case.
-        self.client = WorkspaceClient(baseURL: URL(string: "https://saltare.ai")!, tokens: vault, refresher: vault)
+        self.client = WorkspaceClient(baseURL: WorkspaceEnvironment.baseURL, tokens: vault, refresher: vault)
         let draft = ShareDraft.from(text: text, url: url)
         _title = State(initialValue: draft.title)
         _detail = State(initialValue: draft.body)

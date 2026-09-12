@@ -1,5 +1,6 @@
 import Foundation
 import SaltareKit
+import SaltareWorkspace
 
 /// Manual dependency-injection container, mirroring the Android `AppGraph` on
 /// the Application — no Hilt/Swinject equivalent, just plain construction.
@@ -19,7 +20,7 @@ final class AppGraph {
     let catalog: [AppEntry]
     /// The saltare workspace base URL and Keychain session vault (shared by the
     /// sign-in UI and the agent's inference-proxy credential).
-    let workspaceBaseURL = URL(string: "https://saltare.ai")!
+    let workspaceBaseURL = WorkspaceEnvironment.baseURL
     let tokenVault = TokenVault()
     /// The on-device agent (registry → executor → loop → Anthropic client).
     let agent: AgentAssembly

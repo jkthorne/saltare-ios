@@ -119,7 +119,8 @@ targets:
     platform: iOS
     sources:
       - path: SaltareShare
-      - path: Shared/TokenVault.swift   # only the shared Keychain vault (not the widget/ActivityKit files)
+      # Only what the extension needs — not the widget/ActivityKit files.
+      - path: Shared/TokenVault.swift
     dependencies:
       - package: SaltareHUD
       - package: SaltareWorkspace
