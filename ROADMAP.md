@@ -526,8 +526,16 @@ get told no once and forever. Needs an APNs key and a push-entitled provisioning
 profile, neither of which exists in this repo.
 
 ### iP5 — Polish
-LiveKit voice, full VoiceOver/Dynamic Type, fastlane + TestFlight +
-`PrivacyInfo.xcprivacy`, App Store.
+LiveKit voice, full VoiceOver/Dynamic Type, fastlane + TestFlight, App Store.
+
+`Saltare/PrivacyInfo.xcprivacy` now exists, but only half of it. The
+required-reason API declarations are done (`UserDefaults`/CA92.1 — the one such
+call in the repo, `FrecencyStore`). **`NSPrivacyCollectedDataTypes` is still
+missing and blocks submission:** it describes what the *service* retains and how
+it links to the user — account email, and the workspace content the agent sends
+through the inference proxy — which is a product/legal call rather than
+something to read off the client. Revisit the manifest when `SaltareKeyboard`
+lands, since keyboard extensions have their own required-reason category.
 
 ## Server-side dependencies — all three now CLOSED
 

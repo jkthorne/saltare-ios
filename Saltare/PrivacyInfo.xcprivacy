@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Privacy manifest for the Saltare app target.
+
+  NSPrivacyAccessedAPITypes below is derived from the code, not from judgement:
+  `FrecencyStore` is the only required-reason API use in the whole repo
+  (UserDefaults.standard, for self-recorded launch counts). Nothing here reads
+  file timestamps, disk space, system boot time or active keyboards, and the
+  Keychain is not a required-reason API. The widget and share extensions touch
+  none of these categories, so neither carries a manifest of its own — revisit
+  that if either grows one, and when SaltareKeyboard lands (keyboard extensions
+  have their own category).
+
+  DELIBERATELY ABSENT: NSPrivacyCollectedDataTypes. Declaring it is a statement
+  about what the *service* retains and how it is linked to the user — the
+  account email, the workspace content the agent sends through the inference
+  proxy — and that is a product and legal call, not one to infer from the
+  client. It must be filled in before any App Store submission. See iP5 in
+  ROADMAP.md.
+-->
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyTracking</key>
+    <false/>
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <!-- CA92.1: user defaults readable only by the app itself. -->
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
