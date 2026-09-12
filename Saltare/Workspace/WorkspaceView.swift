@@ -55,6 +55,10 @@ struct WorkspaceView: View {
             content
         }
         .padding(16)
+        // A background rotation may have ended the session since this sheet was
+        // built; re-reading the vault flips us back to sign-in rather than
+        // showing a workspace that no longer loads.
+        .task { session.syncFromVault() }
     }
 
     private var tabBar: some View {

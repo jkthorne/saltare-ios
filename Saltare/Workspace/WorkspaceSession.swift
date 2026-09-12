@@ -21,7 +21,7 @@ final class WorkspaceSession {
 
     init(baseURL: URL, vault: TokenVault = TokenVault()) {
         self.vault = vault
-        self.client = WorkspaceClient(baseURL: baseURL, tokens: vault)
+        self.client = WorkspaceClient(baseURL: baseURL, tokens: vault, refresher: vault)
         self.realtime = RealtimeClient(baseURL: baseURL, tokens: vault)
         self.stored = vault.stored()
     }
@@ -53,17 +53,10 @@ final class WorkspaceSession {
         busy = false
     }
 
-    /// Rotate the access token using the refresh token (call on a 401).
-    @discardableResult
-    func refresh() async -> Bool {
-        guard let refreshToken = vault.refreshTokenSync() else { return false }
-        do {
-            let tokens = try await client.refresh(refreshToken: refreshToken)
-            vault.save(tokens)
-            stored = vault.stored()
-            return true
-        } catch {
-            return false
-        }
+    /// Re-read the vault. The `WorkspaceClient` rotates tokens on a 401 behind
+    /// everyone's back — and drops the session when the refresh token is refused
+    /// — so the signed-in state shown here can go stale between screens.
+    func syncFromVault() {
+        stored = vault.stored()
     }
 }

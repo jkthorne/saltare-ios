@@ -12,7 +12,7 @@ import SaltareWorkspace
 /// process) reads the same token. On unsigned simulator builds the access group
 /// isn't entitled, so Keychain ops no-op (return nil) — live sign-in needs a
 /// signed build, which was always the case.
-struct TokenVault: TokenProviding {
+struct TokenVault: TokenProviding, TokenRefreshing {
     struct Stored: Codable, Sendable, Equatable {
         var access: String
         var refresh: String
@@ -60,6 +60,12 @@ struct TokenVault: TokenProviding {
 
     // TokenProviding
     func accessToken() async -> String? { accessTokenSync() }
+
+    // TokenRefreshing — the client rotates through here on a 401, so an expired
+    // access token never surfaces to the UI as a failed load.
+    func refreshToken() async -> String? { refreshTokenSync() }
+    func accept(_ tokens: AuthTokens) async { save(tokens) }
+    func invalidate() async { clear() }
 
     func save(_ tokens: AuthTokens) {
         let stored = Stored(
