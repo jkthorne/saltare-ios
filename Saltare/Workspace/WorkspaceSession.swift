@@ -35,7 +35,14 @@ final class WorkspaceSession {
         errorMessage = nil
         do {
             let tokens = try await client.signIn(email: email, password: password, deviceName: UIDevice.current.name)
-            vault.save(tokens)
+            // The server said yes but the Keychain said no (an unentitled build,
+            // most often). Without this the form just sits there: no session, no
+            // error, nothing to react to.
+            guard vault.save(tokens) else {
+                errorMessage = "Signed in, but this device wouldn't store the session. Check the app's Keychain access."
+                busy = false
+                return
+            }
             stored = vault.stored()
         } catch {
             errorMessage = workspaceErrorText(error)

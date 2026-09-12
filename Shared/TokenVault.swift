@@ -67,7 +67,11 @@ struct TokenVault: TokenProviding, TokenRefreshing {
     func accept(_ tokens: AuthTokens) async { save(tokens) }
     func invalidate() async { clear() }
 
-    func save(_ tokens: AuthTokens) {
+    /// Persist the session. Returns false if the Keychain refused it — the
+    /// caller has to say so, because a session that didn't persist is a session
+    /// the user does not have.
+    @discardableResult
+    func save(_ tokens: AuthTokens) -> Bool {
         let stored = Stored(
             access: tokens.accessToken,
             refresh: tokens.refreshToken,
@@ -75,12 +79,20 @@ struct TokenVault: TokenProviding, TokenRefreshing {
             workspaceName: tokens.workspace.name,
             userEmail: tokens.user.email
         )
-        guard let data = try? JSONEncoder().encode(stored) else { return }
-        clear()
+        guard let data = try? JSONEncoder().encode(stored) else { return false }
+
+        // Update in place, and only add when there is nothing to update. The
+        // previous delete-then-add left the device with no session at all if the
+        // add failed — a rotation on an unentitled build would log you out.
+        let updated = SecItemUpdate(baseQuery() as CFDictionary,
+                                    [kSecValueData as String: data] as CFDictionary)
+        if updated == errSecSuccess { return true }
+        guard updated == errSecItemNotFound else { return false }
+
         var attributes = baseQuery()
         attributes[kSecValueData as String] = data
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        SecItemAdd(attributes as CFDictionary, nil)
+        return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
     func clear() {
