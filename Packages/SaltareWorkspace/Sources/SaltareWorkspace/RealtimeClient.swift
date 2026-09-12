@@ -1,9 +1,9 @@
 import Foundation
 
 /// A websocket client for saltare's Action Cable endpoint (`<base>/cable`).
-/// Opens one `URLSessionWebSocketTask`, attaches the workspace bearer token (as
-/// `?access_token=` and an `Authorization` header on the handshake), and streams
-/// decoded `CableEvent`s. The protocol framing lives in `ActionCableProtocol`
+/// Opens one `URLSessionWebSocketTask`, attaches the workspace bearer token as an
+/// `Authorization` header on the handshake, and streams decoded `CableEvent`s.
+/// The protocol framing lives in `ActionCableProtocol`
 /// (pure + tested); this is the thin transport around it.
 ///
 /// Subscriptions are multiplexed on the one socket — `subscribe`/`unsubscribe`/
@@ -31,11 +31,7 @@ public final class RealtimeClient: NSObject, @unchecked Sendable {
     /// a close to reconnect.
     public func connect() async -> AsyncStream<CableEvent> {
         let token = await tokens.accessToken()
-        var request = URLRequest(url: urlWithToken(token))
-        if let token, !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        let socket = session.webSocketTask(with: request)
+        let socket = session.webSocketTask(with: Self.handshakeRequest(url: cableURL, token: token))
 
         return AsyncStream<CableEvent> { continuation in
             lock.lock()
@@ -109,11 +105,22 @@ public final class RealtimeClient: NSObject, @unchecked Sendable {
 
     // MARK: - URL
 
-    private func urlWithToken(_ token: String?) -> URL {
-        guard let token, !token.isEmpty,
-              var components = URLComponents(url: cableURL, resolvingAgainstBaseURL: false) else { return cableURL }
-        components.queryItems = [URLQueryItem(name: "access_token", value: token)]
-        return components.url ?? cableURL
+    /// The handshake request. The token rides the `Authorization` header and
+    /// nothing else: a URL query parameter would be written verbatim into every
+    /// proxy and server access log it passes through, and `sk_sal_` is a bearer
+    /// credential — whoever reads the log has the session.
+    ///
+    /// The server accepts either (`ApplicationCable::Connection#user_from_token`);
+    /// the query param exists for browser clients, which cannot set handshake
+    /// headers. `URLSessionWebSocketTask` can, so it should.
+    ///
+    /// Internal for tests.
+    static func handshakeRequest(url: URL, token: String?) -> URLRequest {
+        var request = URLRequest(url: url)
+        if let token, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        return request
     }
 
     /// `https://host` → `wss://host/cable`, `http://host` → `ws://host/cable`.

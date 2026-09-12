@@ -83,4 +83,22 @@ final class ActionCableProtocolTests: XCTestCase {
         XCTAssertEqual(RealtimeClient.cableURL(from: URL(string: "https://saltare.ai")!).absoluteString, "wss://saltare.ai/cable")
         XCTAssertEqual(RealtimeClient.cableURL(from: URL(string: "http://localhost:3000")!).absoluteString, "ws://localhost:3000/cable")
     }
+
+    // MARK: - Handshake
+
+    func testHandshakeCarriesTheTokenInTheHeaderAndNotTheURL() {
+        let url = RealtimeClient.cableURL(from: URL(string: "https://saltare.ai")!)
+        let request = RealtimeClient.handshakeRequest(url: url, token: "sk_sal_secret")
+
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer sk_sal_secret")
+        XCTAssertEqual(request.url?.absoluteString, "wss://saltare.ai/cable")
+        XCTAssertFalse(request.url?.absoluteString.contains("sk_sal_secret") ?? true,
+                       "a bearer token in the URL ends up in every access log on the way")
+    }
+
+    func testHandshakeWithoutATokenSendsNoAuthorization() {
+        let url = RealtimeClient.cableURL(from: URL(string: "https://saltare.ai")!)
+        XCTAssertNil(RealtimeClient.handshakeRequest(url: url, token: nil).value(forHTTPHeaderField: "Authorization"))
+        XCTAssertNil(RealtimeClient.handshakeRequest(url: url, token: "").value(forHTTPHeaderField: "Authorization"))
+    }
 }
