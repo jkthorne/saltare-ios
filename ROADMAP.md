@@ -38,19 +38,26 @@ fight the platform — and say so honestly.
 ```
 saltare-ios/
 ├── Packages/
-│   ├── SaltareHUD/      design system (foundation-only SwiftUI) + Showcase + token tests   ← iP0 (DONE)
-│   ├── SaltareKit/      pure-Swift domain. Search engine DONE (iP1.1): Calculator,
-│   │                    UnitConvert, Frecency, SearchResult, AppSearch. Later:
-│   │                    AgentLoop core, Anthropic + MCP + REST clients
-│   └── SaltareAgent/    agent core DONE (iP2.1): AgentLoop + domain. Later:
-│                        Anthropic SSE client, tool registry + executor, iOS tools
-├── Saltare/             SwiftUI App (XcodeGen project.yml). Command surface DONE (iP1.0);
-│                        later: Chat · Tasks · Docs · DBs · Agents · Settings
-├── SaltareKeyboard/     Keyboard Extension
-├── SaltareWidgets/      WidgetKit + Live Activities + Controls
-├── SaltareShare/        Share Extension
-└── SaltareIntents/      App Intents (Siri / Shortcuts / Spotlight)
+│   ├── SaltareHUD/        design system (foundation-only SwiftUI) + Showcase + token tests  ← iP0
+│   ├── SaltareKit/        pure-Swift domain: AppSearch, Calculator, UnitConvert,
+│   │                      Frecency, ContactSearch, SearchResult                    ← iP1.1
+│   ├── SaltareAgent/      AgentLoop + domain, Anthropic SSE client, tool registry +
+│   │                      executor, TranscriptReducer, McpClient, Live Activity
+│   │                      presentation                                          ← iP2, iP3.4
+│   └── SaltareWorkspace/  saltare REST + Action Cable client, models, Spotlight +
+│                          widget-snapshot + share-draft mapping, base URL         ← iP3.1+
+├── Saltare/               SwiftUI App (XcodeGen project.yml): command surface, agent
+│   └── Intents/           sheet, workspace browser, sign-in, App Intents      ← iP1–iP3
+├── Shared/                compiled into app + extensions: TokenVault, App Group
+│                          snapshot store, ActivityAttributes
+├── SaltareWidgets/        WidgetKit + Live Activities + Controls                 ← iP1.3+
+├── SaltareShare/          Share Extension                                         ← iP3.9
+└── SaltareKeyboard/       Keyboard Extension                                    ← iP4 (TODO)
 ```
+
+Everything above exists except `SaltareKeyboard/`. App Intents live in
+`Saltare/Intents/` rather than a separate target — `openAppWhenRun` intents run
+in-process, so they need no extension of their own.
 
 - **Min iOS 18 / build against the latest SDK** (App Intents, interactive
   widgets, Controls, Live Activities, `@Observable`).
@@ -450,6 +457,41 @@ build.
 - **Verification note:** the shared Keychain needs a signed build (the access
   group isn't entitled on the unsigned simulator); the draft parsing is
   unit-tested and the extension builds.
+
+### Between iP3 and iP4 — infrastructure & hardening
+
+Not a milestone: work that closed gaps in what iP0–iP3 had already shipped.
+Recorded here because the roadmap is meant to describe what exists.
+
+- **CI** (`.github/workflows/ci.yml`) — `swift test` for all four packages on
+  every push and PR. Before this they ran on whichever Mac someone happened to
+  open Xcode on. Since extended with an `xcodebuild` job: the app target and its
+  two embedded extensions (~2,900 lines) had no test target and were compiled by
+  no automation at all, and it doubles as the check that `project.yml` still
+  generates — the `.xcodeproj` is deliberately not committed.
+- **Golden payloads** — `GoldenPayloadTests` decodes the server's own
+  `test/fixtures/files/api_golden/*.json` (synced by `script/sync-goldens.sh`),
+  so a renamed serializer key arrives as a changed fixture instead of a bug
+  report from a shipped app.
+- **Token rotation** — `WorkspaceSession.refresh()` existed with zero call sites,
+  so the stored `rt_sal_` was never spent and an expired access token broke every
+  workspace surface until the user signed in again. `WorkspaceClient` now rotates
+  on a 401 and replays the request, coalescing concurrent 401s onto one refresh.
+  A server refusal ends the session; a transport failure does not.
+- **Keychain honesty** — `TokenVault.save` dropped its `SecItemAdd` status, so a
+  refusal looked identical to success and the sign-in form sat there with no
+  session and no error. It now reports failure, and updates in place instead of
+  delete-then-add (a failed add used to leave the device with no session at all).
+- **Base URL** — `https://saltare.ai` was hardcoded in four places including the
+  share extension. Now `WorkspaceEnvironment`, overridable via `SALTARE_BASE_URL`
+  (scheme) or `SaltareWorkspaceBaseURL` (Info.plist), so the many "needs a live
+  server" notes below can be exercised against a local Rails instance.
+- **Cable token** — the handshake no longer repeats `sk_sal_` as an
+  `?access_token=` query parameter; the `Authorization` header alone is enough
+  for a native client, and query strings land in every access log en route.
+- **Agent output ceiling** — `max_tokens` 4096 → 64k. Turns stream, so nothing
+  was holding it down, and on Opus/Sonnet the adaptive thinking blocks bill
+  against the same ceiling; 4096 truncated real answers mid-sentence.
 
 ### iP4 — `SaltareKeyboard` extension
 `UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/

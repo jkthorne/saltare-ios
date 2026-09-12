@@ -21,7 +21,7 @@ vault), the iOS toolbox (registry/executor + intent/`device_status`/GRANT-gated
 Contacts & Calendar tools, `open_app`), and the HUD agent sheet (streaming
 transcript, tool chips, permission GRANT, model picker) wired to the AgentStub
 row, plus the agent's **MCP `saltare__*` workspace tools** (iP3.4).
-`SaltareAgent` is **42 tests** green; the app builds and the sheet renders
+`SaltareAgent` is **45 tests**; the app builds and the sheet renders
 on the simulator.
 
 **iP3 (deep `saltare` integration) is underway:** iP3.1 (pure REST client, 12
@@ -51,19 +51,25 @@ completes iP3. Next: iP4 (the `SaltareKeyboard` extension).
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
 | `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, the `TranscriptReducer`, the **MCP client** (`McpClient`/`McpToolSource` — `saltare__*` workspace tools over the Streamable-HTTP `/mcp` endpoint), and the Live Activity presentation (`AgentActivityPresentation`). Ported from the Android `:agent` with its test suites (45 tests). |
-| `Packages/SaltareWorkspace` | The **saltare REST + realtime client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), native device auth (`POST /api/v1/auth/token`), the **Action Cable** client (`ActionCableProtocol` wire codec + `RealtimeClient` websocket transport), the **Spotlight** mapping (`SpotlightEntry`/`SpotlightIndex`), the **widget snapshot** (`WorkspaceSnapshot`), and the **share draft** parser (`ShareDraft`). 34 tests. |
+| `Packages/SaltareWorkspace` | The **saltare REST + realtime client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), native device auth (`POST /api/v1/auth/token`), the **Action Cable** client (`ActionCableProtocol` wire codec + `RealtimeClient` websocket transport), the **Spotlight** mapping (`SpotlightEntry`/`SpotlightIndex`), the **widget snapshot** (`WorkspaceSnapshot`), and the **share draft** parser (`ShareDraft`), plus `WorkspaceEnvironment` (the overridable base URL). 55 tests. |
 
-(Future: `SaltareAgent`, the `Saltare` app target, and the keyboard/widget/
-share/intents extensions — see the roadmap.)
+(The `Saltare` app target and the widget / share / intents extensions live at
+the repo root, outside `Packages/`. `SaltareKeyboard` is still to come — see the
+roadmap.)
 
 ## Build & test
 
 The pure packages build and test on the Mac without a simulator:
 
 ```bash
-( cd Packages/SaltareHUD && swift build && swift test )   # design system — 8 tests
-( cd Packages/SaltareKit && swift build && swift test )   # search engine — 59 tests
+( cd Packages/SaltareHUD && swift build && swift test )        # design system — 8 tests
+( cd Packages/SaltareKit && swift build && swift test )        # search engine — 63 tests
+( cd Packages/SaltareAgent && swift build && swift test )      # agent + Anthropic — 45 tests
+( cd Packages/SaltareWorkspace && swift build && swift test )  # saltare client — 55 tests
 ```
+
+CI (`.github/workflows/ci.yml`) runs all four on every push and pull request,
+then builds the app and its two embedded extensions with XcodeGen + xcodebuild.
 
 The app target is generated from `project.yml` by **XcodeGen** (the `.xcodeproj`
 is gitignored — regenerate it, never commit it):
