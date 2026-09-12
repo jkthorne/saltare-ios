@@ -97,25 +97,35 @@ final class FakeVault: TokenProviding, TokenRefreshing, @unchecked Sendable {
     var refreshReads: Int { lock.lock(); defer { lock.unlock() }; return refreshReadCount }
     var storedRefresh: String? { lock.lock(); defer { lock.unlock() }; return refresh }
 
-    func accessToken() async -> String? {
+    // `NSLock.lock()`/`unlock()` are unavailable from async contexts — holding a
+    // lock across a suspension point is how you deadlock a cooperative thread
+    // pool. Each async requirement therefore delegates to a synchronous
+    // accessor, the same split `RealtimeClient.currentSocket()` makes.
+
+    func accessToken() async -> String? { currentAccess() }
+    func refreshToken() async -> String? { takeRefreshToken() }
+    func accept(_ tokens: AuthTokens) async { store(tokens) }
+    func invalidate() async { drop() }
+
+    private func currentAccess() -> String? {
         lock.lock(); defer { lock.unlock() }
         return access
     }
 
-    func refreshToken() async -> String? {
+    private func takeRefreshToken() -> String? {
         lock.lock(); defer { lock.unlock() }
         refreshReadCount += 1
         return refresh
     }
 
-    func accept(_ tokens: AuthTokens) async {
+    private func store(_ tokens: AuthTokens) {
         lock.lock(); defer { lock.unlock() }
         access = tokens.accessToken
         refresh = tokens.refreshToken
         acceptCount += 1
     }
 
-    func invalidate() async {
+    private func drop() {
         lock.lock(); defer { lock.unlock() }
         access = nil
         refresh = nil
