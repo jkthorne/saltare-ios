@@ -21,7 +21,7 @@ final class AnthropicRequestTests: XCTestCase {
         )
         XCTAssertEqual(body["model"], .string("claude-opus-4-8"))
         XCTAssertEqual(body["stream"], .bool(true))
-        XCTAssertEqual(body["max_tokens"], .number(4096))
+        XCTAssertEqual(body["max_tokens"], .number(Double(AnthropicRequest.defaultMaxTokens)))
         XCTAssertEqual(body["messages"], .array([.object(["role": .string("user"), "content": .string("hi")])]))
     }
 
@@ -98,8 +98,9 @@ final class AnthropicRequestTests: XCTestCase {
     func testBodyEncodesToJSON() throws {
         let body = AnthropicRequest.body(model: .opus, history: [.user("hi")], tools: [], systemStable: "S", systemVolatile: "V")
         let data = try body.serializedData()
-        // Round-trips and renders max_tokens as an integer (not 4096.0).
-        XCTAssertEqual(JSONValue.parse(data)?["max_tokens"], .number(4096))
-        XCTAssertTrue(String(data: data, encoding: .utf8)!.contains("\"max_tokens\":4096"))
+        // Round-trips and renders max_tokens as an integer (not 64000.0).
+        XCTAssertEqual(JSONValue.parse(data)?["max_tokens"], .number(Double(AnthropicRequest.defaultMaxTokens)))
+        XCTAssertTrue(String(data: data, encoding: .utf8)!
+            .contains("\"max_tokens\":\(AnthropicRequest.defaultMaxTokens)"))
     }
 }

@@ -8,7 +8,15 @@ import Foundation
 /// system block carries `cache_control: {type: "ephemeral"}` and the volatile
 /// suffix renders after it. Tool list order IS the cache prefix — never reorder.
 public enum AnthropicRequest {
-    public static let defaultMaxTokens = 4096
+    /// The per-response ceiling. Every turn streams (`stream: true`), so there is
+    /// no HTTP timeout pressure to keep this small — and on Opus/Sonnet the
+    /// adaptive thinking blocks are billed against it too, so a 4096 ceiling
+    /// truncated real answers mid-sentence after a few tool calls.
+    ///
+    /// 64k is the largest value safe across the whole model picker: Opus 4.8 and
+    /// Sonnet 4.6 allow 128k, but Haiku 4.5 tops out here, and one number beats a
+    /// per-model table for a ceiling that is only ever a backstop.
+    public static let defaultMaxTokens = 64_000
 
     public static func body(
         model: AgentModel,
