@@ -89,7 +89,8 @@ final class TokenRefreshTests: XCTestCase {
         let client = WorkspaceClient(baseURL: baseURL, tokens: vault, refresher: vault, session: StubTransport.session())
 
         await XCTAssertThrowsErrorAsync(try await client.tasks()) { error in
-            XCTAssertEqual(error as? WorkspaceError, .http(status: 401), "the second 401 surfaces rather than looping")
+            XCTAssertEqual(error as? WorkspaceError, WorkspaceError.http(status: 401),
+                           "the second 401 surfaces rather than looping")
         }
         XCTAssertEqual(StubTransport.requests.filter { $0.path.hasSuffix("/auth/refresh") }.count, 1,
                        "one rotation per request, never a refresh loop")

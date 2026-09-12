@@ -14,19 +14,19 @@ final class WorkspaceEnvironmentTests: XCTestCase {
 
     func testInfoPlistOverridesProduction() {
         XCTAssertEqual(WorkspaceEnvironment.resolve(info: "https://staging.saltare.ai", environment: nil),
-                       URL(string: "https://staging.saltare.ai"))
+                       URL(string: "https://staging.saltare.ai")!)
     }
 
     func testEnvironmentWinsOverInfoPlist() {
         let resolved = WorkspaceEnvironment.resolve(info: "https://staging.saltare.ai",
                                                     environment: "http://localhost:3000")
-        XCTAssertEqual(resolved, URL(string: "http://localhost:3000"),
+        XCTAssertEqual(resolved, URL(string: "http://localhost:3000")!,
                        "the scheme variable is the per-run override; the plist is the target default")
     }
 
     func testWhitespaceIsTrimmed() {
         XCTAssertEqual(WorkspaceEnvironment.resolve(info: nil, environment: "  http://localhost:3000\n"),
-                       URL(string: "http://localhost:3000"))
+                       URL(string: "http://localhost:3000")!)
     }
 
     func testUnusableOverridesFallBackRatherThanBreakingTheApp() {
