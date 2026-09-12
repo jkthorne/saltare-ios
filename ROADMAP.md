@@ -499,17 +499,45 @@ composing), symbols/numeric/inputType layouts, long-press alternates, the 30k
 autocorrect dictionary (mmap trie) + suggestion strip, corner-bracket frame.
 Constraints: Full Access for haptics/network; ~60MB memory cap.
 
+### iP4.5 — Push notifications 🔲 TODO (unowned until now)
+
+The app has no push code at all: no `UNUserNotificationCenter`, no
+`registerForRemoteNotifications`, no APNs entitlement. This was listed only as a
+*server* dependency, so when the server shipped its half nothing on this side
+picked it up — the client work had never been anyone's milestone.
+
+The server half is done (`POST /api/v1/device_tokens`, bearer-authenticated,
+scope `notifications:read`, with a matching `DELETE` for sign-out). What remains
+here:
+
+- `aps-environment` entitlement + `UIBackgroundModes: remote-notification`.
+- Request authorization, register, and post the APNs token to
+  `/api/v1/device_tokens` with `app` set — the server routes iOS pushes by APNs
+  topic (`ai.saltare.<app>`), and an omitted `app` sends them to the wrong topic
+  where they vanish.
+- Unregister (`DELETE`) on sign-out, beside the existing Spotlight-index and
+  widget-snapshot teardown in `WorkspaceSession.signOut`.
+- Route a notification tap through `CommandRouter`, like the Spotlight path.
+
+**Open questions before starting** (product, not engineering): which
+notifications warrant a push at all, and when to ask for permission — asking on
+first launch, before the user has any workspace content, is the reliable way to
+get told no once and forever. Needs an APNs key and a push-entitled provisioning
+profile, neither of which exists in this repo.
+
 ### iP5 — Polish
 LiveKit voice, full VoiceOver/Dynamic Type, fastlane + TestFlight +
 `PrivacyInfo.xcprivacy`, App Store.
 
-## Server-side dependencies (mostly additive — most scaffolding already exists)
+## Server-side dependencies — all three now CLOSED
 
-1. `POST /api/v1/auth/token` — email/password → scoped mobile token (the one
-   genuine gap; everything else works today with a pasted API key).
-2. Token auth on Action Cable for native realtime (web uses the session cookie).
-3. Native push registration that accepts a bearer token (current
-   `POST /mobile/device_tokens` is webview/cookie-driven).
+1. ~~`POST /api/v1/auth/token`~~ — shipped; consumed by iP3.2's sign-in.
+2. ~~Token auth on Action Cable~~ — shipped (saltare `2fad49f8`); consumed by
+   iP3.5. The native client authenticates with the `Authorization` header.
+3. ~~Native push registration accepting a bearer token~~ — shipped:
+   `POST /api/v1/device_tokens` (and `DELETE`) is bearer-authenticated, gated on
+   `notifications:read`, and takes `token` / `platform` / `app` / `app_version`.
+   **The client side is now the open half — see iP4.5 below.**
 
 Already present server-side: MCP (`/mcp`), REST (`/api/v1/*`), `sk_sal_` scoped
 tokens, APNs delivery (`DeviceToken`, `MobilePushNotificationJob`,
