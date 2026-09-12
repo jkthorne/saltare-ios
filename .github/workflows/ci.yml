@@ -5,11 +5,17 @@
 # small: `swift test` per package (no simulator — every package declares a macOS
 # platform), plus one app build.
 #
-# The app build earns its cost. The four packages are ~40% of the Swift here;
-# the rest — the app target, the widget/Live Activity extension and the share
-# extension — has no test target and, until this job, was compiled by nothing.
-# `xcodebuild` on the app also builds the two embedded extensions, so one job
-# covers all three. It does not run tests: there are none to run yet.
+# The app build covers what the packages can't. The four packages are ~40% of
+# the Swift here; the rest — the app target, the widget/Live Activity extension
+# and the share extension — has no test target and, until that job existed, was
+# compiled by nothing. `xcodebuild` on the app also builds the two embedded
+# extensions, so one job covers all three. It does not run tests: there are none
+# to run yet.
+#
+# It runs on pull requests only, to keep the push path cheap. NOTE: nothing has
+# ever been merged here via a pull request, so as things stand this job will not
+# run at all. If the app and extensions should be built on master pushes too,
+# drop the `if:` on the job.
 name: CI
 
 on:
@@ -39,6 +45,7 @@ jobs:
         run: swift test --package-path Packages/${{ matrix.package }}
 
   app:
+    if: github.event_name == 'pull_request'
     runs-on: macos-latest
     steps:
       - name: Checkout code

@@ -468,7 +468,9 @@ Recorded here because the roadmap is meant to describe what exists.
   open Xcode on. Since extended with an `xcodebuild` job: the app target and its
   two embedded extensions (~2,900 lines) had no test target and were compiled by
   no automation at all, and it doubles as the check that `project.yml` still
-  generates — the `.xcodeproj` is deliberately not committed.
+  generates — the `.xcodeproj` is deliberately not committed. That job runs on
+  pull requests only; since nothing here has ever been merged via a PR, it is
+  effectively off until that changes or the `if:` is dropped.
 - **Golden payloads** — `GoldenPayloadTests` decodes the server's own
   `test/fixtures/files/api_golden/*.json` (synced by `script/sync-goldens.sh`),
   so a renamed serializer key arrives as a changed fixture instead of a bug

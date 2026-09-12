@@ -68,8 +68,9 @@ The pure packages build and test on the Mac without a simulator:
 ( cd Packages/SaltareWorkspace && swift build && swift test )  # saltare client — 55 tests
 ```
 
-CI (`.github/workflows/ci.yml`) runs all four on every push and pull request,
-then builds the app and its two embedded extensions with XcodeGen + xcodebuild.
+CI (`.github/workflows/ci.yml`) runs all four on every push and pull request.
+The app and its two embedded extensions are built (XcodeGen + xcodebuild) on
+pull requests only, to keep the push path cheap on 10x-billed macOS runners.
 
 The app target is generated from `project.yml` by **XcodeGen** (the `.xcodeproj`
 is gitignored — regenerate it, never commit it):
