@@ -42,7 +42,15 @@ is done, iP3.7 adds a **Live Activity** for a running agent turn (Lock Screen +
 Dynamic Island), iP3.8 adds a **workspace Widget** (recent channels/tasks via a
 shared App Group snapshot), and iP3.9 adds a **Share extension** (send shared
 text/URL to a channel or create a task, via the shared-Keychain token) — which
-completes iP3. Next: iP4 (the `SaltareKeyboard` extension).
+completes iP3.
+
+**iP4 (the keyboard) is complete:** iP4.1 ports the Android `:keyboard` input
+rule into the pure `SaltareKeyboard` package — reducer, layouts, editor-trait
+policy, autocorrect engine over a bundled 30k word list, 67 tests — and iP4.2
+adds the `SaltareKeyboardExtension` target: a `UIInputViewController` hosting
+the HUD keyboard in SwiftUI, with an emulated composing region (iOS gives a
+keyboard extension no marked-text API) and **no Full Access requested**. Next:
+iP4.5 (push notifications), which needs an APNs key and two product calls.
 
 ## Packages
 
@@ -51,11 +59,13 @@ completes iP3. Next: iP4 (the `SaltareKeyboard` extension).
 | `Packages/SaltareHUD` | The design system as a **foundation-only SwiftUI package** — no UIKit chrome. Tokens ported 1:1 from saltare's `application.css` (dark "android" + light "parchment"), Geist/Geist Mono, corner brackets, diamond markers, scan bars, HUD components. Includes a `ShowcaseView` gallery. |
 | `Packages/SaltareKit` | The **pure-Swift domain** (no UIKit/SwiftUI) — the universal-input search engine: `AppSearch` ranking, `Calculator`, `UnitConvert`, `Frecency`, the `SearchResult` contract. Ported 1:1 from the Android `:launcher` `domain/` with its test suites (63 tests). |
 | `Packages/SaltareAgent` | The **agent core + Anthropic boundary** (Foundation-only, no UIKit/SDK) — the manual streaming tool loop (`AgentLoop`) + domain, the Messages API layer (`AnthropicRequest`, `AnthropicSSEParser`, `AnthropicLlmClient` over `URLSession.bytes`), the tool registry/executor, the `TranscriptReducer`, the **MCP client** (`McpClient`/`McpToolSource` — `saltare__*` workspace tools over the Streamable-HTTP `/mcp` endpoint), and the Live Activity presentation (`AgentActivityPresentation`). Ported from the Android `:agent` with its test suites (45 tests). |
+| `Packages/SaltareKeyboard` | The **keyboard's pure domain** (no UIKit) — the input reducer (shift/caps-lock, composing regions, autocorrect application), the key layouts, the `UITextInputTraits` mirror that decides page/auto-cap/suggestions, and the autocorrect engine (`WordDictionary`/`KeyProximity`/`Corrector`/`Suggester`) over a bundled 30k-word frequency list. Ported from the Android `:keyboard` `domain/` with its test suites (67 tests). |
 | `Packages/SaltareWorkspace` | The **saltare REST + realtime client** (Foundation-only) — `Decodable` models ported from the `Api::V1::*Serializer`s, pure `WorkspaceEndpoint` builders, the `URLSession` `WorkspaceClient` (Bearer auth, `{data:…}` unwrap, `{error}` envelope), native device auth (`POST /api/v1/auth/token`), the **Action Cable** client (`ActionCableProtocol` wire codec + `RealtimeClient` websocket transport), the **Spotlight** mapping (`SpotlightEntry`/`SpotlightIndex`), the **widget snapshot** (`WorkspaceSnapshot`), and the **share draft** parser (`ShareDraft`), plus `WorkspaceEnvironment` (the overridable base URL). 55 tests. |
 
-(The `Saltare` app target and the widget / share / intents extensions live at
-the repo root, outside `Packages/`. `SaltareKeyboard` is still to come — see the
-roadmap.)
+(The `Saltare` app target and the widget / share / keyboard extensions live at
+the repo root, outside `Packages/`. The keyboard is two pieces: the package
+above holds its input rule, `SaltareKeyboardExtension/` holds the UIKit host —
+a target cannot share a module name with a package it imports.)
 
 ## Build & test
 
@@ -65,11 +75,12 @@ The pure packages build and test on the Mac without a simulator:
 ( cd Packages/SaltareHUD && swift build && swift test )        # design system — 8 tests
 ( cd Packages/SaltareKit && swift build && swift test )        # search engine — 63 tests
 ( cd Packages/SaltareAgent && swift build && swift test )      # agent + Anthropic — 45 tests
+( cd Packages/SaltareKeyboard && swift build && swift test )   # keyboard domain — 67 tests
 ( cd Packages/SaltareWorkspace && swift build && swift test )  # saltare client — 55 tests
 ```
 
-CI (`.github/workflows/ci.yml`) runs all four on every push and pull request.
-The app and its two embedded extensions are built (XcodeGen + xcodebuild) on
+CI (`.github/workflows/ci.yml`) runs all five on every push and pull request.
+The app and its three embedded extensions are built (XcodeGen + xcodebuild) on
 pull requests only, to keep the push path cheap on 10x-billed macOS runners.
 
 The app target is generated from `project.yml` by **XcodeGen** (the `.xcodeproj`

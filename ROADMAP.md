@@ -44,18 +44,22 @@ saltare-ios/
 │   ├── SaltareAgent/      AgentLoop + domain, Anthropic SSE client, tool registry +
 │   │                      executor, TranscriptReducer, McpClient, Live Activity
 │   │                      presentation                                          ← iP2, iP3.4
-│   └── SaltareWorkspace/  saltare REST + Action Cable client, models, Spotlight +
-│                          widget-snapshot + share-draft mapping, base URL         ← iP3.1+
+│   ├── SaltareWorkspace/  saltare REST + Action Cable client, models, Spotlight +
+│   │                      widget-snapshot + share-draft mapping, base URL         ← iP3.1+
+│   └── SaltareKeyboard/   pure keyboard domain: reducer, layouts, editor traits,
+│                          autocorrect engine + the 30k word list                  ← iP4.1
 ├── Saltare/               SwiftUI App (XcodeGen project.yml): command surface, agent
 │   └── Intents/           sheet, workspace browser, sign-in, App Intents      ← iP1–iP3
 ├── Shared/                compiled into app + extensions: TokenVault, App Group
 │                          snapshot store, ActivityAttributes
 ├── SaltareWidgets/        WidgetKit + Live Activities + Controls                 ← iP1.3+
 ├── SaltareShare/          Share Extension                                         ← iP3.9
-└── SaltareKeyboard/       Keyboard Extension                                    ← iP4 (TODO)
+└── SaltareKeyboardExtension/   Keyboard Extension (UIInputViewController + SwiftUI) ← iP4.2
 ```
 
-Everything above exists except `SaltareKeyboard/`. App Intents live in
+Everything above exists. The keyboard splits in two — the package holds the
+input rule, the extension target holds the UIKit host — because a target and
+the package it imports cannot share a module name. App Intents live in
 `Saltare/Intents/` rather than a separate target — `openAppWhenRun` intents run
 in-process, so they need no extension of their own.
 
@@ -496,10 +500,65 @@ Recorded here because the roadmap is meant to describe what exists.
   against the same ceiling; 4096 truncated real answers mid-sentence.
 
 ### iP4 — `SaltareKeyboard` extension
-`UIInputViewController` hosting SwiftUI: port the pure reducer (shift/caps/
-composing), symbols/numeric/inputType layouts, long-press alternates, the 30k
-autocorrect dictionary (mmap trie) + suggestion strip, corner-bracket frame.
-Constraints: Full Access for haptics/network; ~60MB memory cap.
+
+#### iP4.1 — The input rule, as a package ✅ DONE (2026-09-13)
+`Packages/SaltareKeyboard`, ported from the Android `:keyboard` `domain/`
+package (pure JVM → pure Swift, no UIKit). `swift test` green (**67 tests**),
+and in the CI package matrix.
+- **Reducer:** `KeyboardReducer.reduce` — one-shot shift vs double-tap caps
+  lock, composing regions, word boundaries, autocorrect application on space /
+  punctuation / page switch, verbatim on enter.
+- **Layouts:** letters (digits as long-press alternates), two symbol pages, the
+  numeric page, plus an opt-in globe key.
+- **Field policy:** `EditorTraits` (a UIKit-free mirror of `UITextInputTraits`)
+  → `EditorContext` — initial page, auto-capitalize seed, return label, whether
+  suggestions are allowed.
+- **Autocorrect:** `WordDictionary` (binary-searched alphabetical index),
+  `KeyProximity`, `Corrector` (Norvig single-edit, adjacent-key substitutions
+  only), `Suggester` (completions + corrections, casing carried over).
+- **Word list:** the Android module's 30k `dictionary.txt` (hermitdave/
+  FrequencyWords, MIT — recorded in NOTICE), shipped as a *package* resource so
+  `swift test` covers the load path.
+- **Deliberate divergences from the Android port:** iOS gives an extension no
+  marked-text API, so the composing region is emulated — the reducer emits
+  whole-word intents and `TextEditing.rewrite` turns consecutive words into the
+  minimal delete-and-insert. `EditorInfoParser`'s bitmask reading is replaced by
+  the traits mirror; `multiline` is gone (iOS does not report it). The mmap'd
+  trie is deferred: 377KB of text parsing into a few MB is well inside the
+  ~60MB extension ceiling, and a device memory report is a better reason to
+  build one than a guess.
+
+#### iP4.2 — The keyboard extension ✅ DONE (2026-09-13) — iP4 COMPLETE
+A `SaltareKeyboardExtension` app-extension target (embedded in the app) hosting
+the HUD keyboard in SwiftUI. App + all three extensions build.
+- **`KeyboardViewController`** (`com.apple.keyboard-service` principal class):
+  reads the field's traits, hosts the SwiftUI surface at a fixed height, starts
+  a session per *field* (not per keystroke — restarting on text change would
+  wipe the word being typed), loads the word list off the main thread.
+- **`TextDocumentGateway`:** the only translator of `EditorIntent`s into
+  `UITextDocumentProxy` calls, and the owner of the emulated composing region.
+  `performEnter` inserts a newline: an extension cannot invoke a field's return
+  action the way Android's `performDefaultEditorAction` can.
+- **`KeyboardModel`:** the reducer + gateway + `Suggester`, keeping
+  `autoCorrection` in sync; drops the composing region when the host moves the
+  cursor out from under it.
+- **UI:** `KeyboardRootView` (suggestion strip over weighted key rows on abyss,
+  framed once with corner brackets), `KeyView` (uppercase keycaps, arc-bordered
+  shift with a caps-lock marker, `SALTARE` space bar, accent return key),
+  `KeyCell` — one press gesture for every key, since a `Button` plus a
+  simultaneous long-press fires both.
+- **Full Access is NOT requested** (`RequestsOpenAccess: false`). It buys
+  haptics, network and the shared container; the keyboard needs none of them
+  yet, and it is the scariest prompt iOS shows. `KeyFeedback` degrades to
+  `playInputClick()` and the haptic path is already written for the day this
+  flips.
+- **Verification note:** compile + the package's 67 tests. A keyboard extension
+  cannot be exercised in CI — enabling it in Settings, granting it a field, and
+  judging the feel of key repeat and autocorrect needs a real device.
+- **Not yet:** auto-capitalization after a sentence-ending period (the port only
+  seeds the initial shift, like Android), a number row, landscape metrics,
+  emoji, and any workspace reach (agent/snippet keys) — all of which would
+  arrive with Full Access.
 
 ### iP4.5 — Push notifications 🔲 TODO (unowned until now)
 

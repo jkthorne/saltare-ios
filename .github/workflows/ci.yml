@@ -65,7 +65,7 @@ jobs:
 
       # Unsigned: CI has no signing identity, and nothing here needs one to
       # compile. `generic/platform=iOS Simulator` avoids booting a simulator.
-      - name: Build Saltare (app + widget + share extensions)
+      - name: Build Saltare (app + widget/share/keyboard extensions)
         run: |
           xcodebuild build \
             -project Saltare.xcodeproj \
@@ -85,7 +85,7 @@ jobs:
           app="$products/Saltare.app"
           test -d "$app" || { echo "::error::no Saltare.app — the build compiled nothing"; ls -R "$products" || true; exit 1; }
           echo "built: $app"
-          for ext in SaltareWidgets SaltareShare; do
+          for ext in SaltareWidgets SaltareShare SaltareKeyboardExtension; do
             found=$(find "$products" -name "$ext.appex" -maxdepth 4 -print -quit)
             test -n "$found" || { echo "::error::no $ext.appex — the extension did not build"; exit 1; }
             echo "built: $found"
