@@ -23,6 +23,8 @@ packages:
     path: Packages/SaltareKit
   SaltareAgent:
     path: Packages/SaltareAgent
+  SaltareKeyboard:
+    path: Packages/SaltareKeyboard
   SaltareWorkspace:
     path: Packages/SaltareWorkspace
 
@@ -40,6 +42,7 @@ targets:
       - package: SaltareWorkspace
       - target: SaltareWidgets       # embed the widget/control extension
       - target: SaltareShare         # embed the share extension
+      - target: SaltareKeyboardExtension   # embed the keyboard
     info:
       path: Saltare/Info.plist
       properties:
@@ -156,6 +159,46 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app.share
         PRODUCT_NAME: SaltareShare
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
+
+  # The keyboard. Named for the target, not the package: the extension's module
+  # and the `SaltareKeyboard` package it imports cannot share a name.
+  SaltareKeyboardExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SaltareKeyboardExtension
+    dependencies:
+      - package: SaltareHUD
+      - package: SaltareKeyboard
+    info:
+      path: SaltareKeyboardExtension/Info.plist
+      properties:
+        CFBundleDisplayName: saltare
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            # The layouts can reach every ASCII character, so iOS may offer this
+            # keyboard for passcode fields.
+            IsASCIICapable: true
+            PrefersRightToLeftLayout: false
+            PrimaryLanguage: en-US
+            # Full Access buys haptics, the network and the shared container.
+            # The keyboard needs none of them yet — it types locally against a
+            # bundled word list — and asking for it is the single scariest
+            # prompt iOS shows. `KeyFeedback` already degrades to the input
+            # click, so this flips to true the day the keyboard needs the
+            # workspace, not before.
+            RequestsOpenAccess: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.saltare.app.keyboard
+        PRODUCT_NAME: SaltareKeyboardExtension
         MARKETING_VERSION: "0.1"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
