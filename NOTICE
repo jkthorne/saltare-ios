@@ -7,6 +7,12 @@ This product bundles the following third-party assets:
   License 1.1. See
   Packages/SaltareHUD/Sources/SaltareHUD/Resources/Fonts/OFL-Geist.txt.
 
+- The keyboard's 30k-word frequency list
+  (Packages/SaltareKeyboard/Sources/SaltareKeyboard/Resources/dictionary.txt) —
+  hermitdave/FrequencyWords, MIT licensed, derived from the OpenSubtitles
+  corpus and filtered to lowercase alphabetic words. The same list the
+  saltareOS Android keyboard ships.
+
 The NieR:Automata-inspired HUD design language is ported from the saltare web
 design system (saltare/app/assets/tailwind/application.css) and the saltareOS
 Android :hud library.
